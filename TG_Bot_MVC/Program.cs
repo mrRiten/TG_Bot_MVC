@@ -25,6 +25,15 @@ namespace TG_Bot_MVC
             {
                 Console.WriteLine(admin);
             }
+
+            //localAPI.AddReplasementLesson(
+            //    localAPI.TryGetGroupId("ИС1-21"),
+            //    localAPI.GetWeekOfScheduleId("Знаменатель"),
+            //    "{ {} {} {} {} {} {} {} {} }"
+            //    );
+
+            var repl = localAPI.GetReplasementLesson(1);
+            Console.WriteLine($"{repl.WeekOfSchedule.WeekOfScheduleName} {repl.Group.GroupName} - {repl.SerializeDataLessons}");
         }
     }
 }
