@@ -39,12 +39,11 @@ namespace TG_Bot_MVC
             _context.SaveChanges();
         }
 
-        public List<User> GetUsers()
+        public User? GetUser(int userId)
         {
-            var users = _context.Users
+            return _context.Users
                 .Include(u => u.Status)
-                .ToList();
-            return users;
+                .FirstOrDefault(u => u.IdUser == userId);
         }
 
     }

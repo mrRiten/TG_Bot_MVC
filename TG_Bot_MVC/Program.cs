@@ -12,12 +12,9 @@ namespace TG_Bot_MVC
             var localAPI = new LocalAPI(context);
             var configWorker = new ConfigWorker();
 
-            var users = localAPI.GetUsers();
+            var user = localAPI.GetUser(1);
 
-            foreach (var user in users)
-            {
-                Console.WriteLine($"{user.UserName} - {user.IdUser} - {user.Status.StatusName}");
-            }
+            Console.WriteLine($"{user.UserName} - {user.IdUser} - {user.Status.StatusName}");
 
             Console.WriteLine(configWorker.GetConnectionString());
             Console.WriteLine(configWorker.GetLoggerString());
