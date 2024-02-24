@@ -27,6 +27,13 @@ namespace TG_Bot_MVC
             return loggerString;
         }
 
+        public string GetBotToken()
+        {
+            var data = GetJsonData();
+            var botToken = (string)data["BotToken"] ?? " ";
+            return botToken;
+        }
+
         public string[] GetAdmins()
         {
             var data = GetJsonData();

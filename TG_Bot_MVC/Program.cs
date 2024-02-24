@@ -21,6 +21,7 @@ namespace TG_Bot_MVC
 
             Console.WriteLine(configWorker.GetConnectionString());
             Console.WriteLine(configWorker.GetLoggerString());
+            Console.WriteLine(configWorker.GetBotToken());
 
             var Admins = configWorker.GetAdmins();
             foreach (var admin in Admins)
