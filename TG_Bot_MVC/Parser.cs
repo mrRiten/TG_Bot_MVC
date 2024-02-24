@@ -68,7 +68,7 @@ namespace TG_Bot_MVC
                 throw new Exception("Скобки не найдены");
         }
 
-        static Dictionary<string, Dictionary<int, string>> ParseScheduleTable(HtmlNode table)
+        private static Dictionary<string, Dictionary<int, string>> ParseScheduleTable(HtmlNode table)
         {
             // Создаем словарь, где ключом является название группы, а значением словарь пар номеров замен и соответствующих данных о заменах
             var groupData = new Dictionary<string, Dictionary<int, string>>();
@@ -99,9 +99,9 @@ namespace TG_Bot_MVC
                         int[] keys = ValidateNumbersReplacementLessons(NumbersReplacementLessons);
 
                         // Если группа еще не добавлена в словарь, добавляем ее
-                        if (!groupData.ContainsKey(group))
+                        if (!groupData.TryGetValue(group, out Dictionary<int, string>? value))
                         {
-                            groupData[group] = new Dictionary<int, string>()
+                            value = new Dictionary<int, string>()
                             {
                                 { 0, null },
                                 { 1, null },
@@ -111,12 +111,13 @@ namespace TG_Bot_MVC
                                 { 5, null },
                                 { 6, null }
                             };
+                            groupData[group] = value;
                         }
 
                         // Записываем данные о заменах в словарь
                         foreach (int key in keys)
                         {
-                            groupData[group][key] = rowData;
+                            value[key] = rowData;
                         }
                     }
                 }
@@ -129,14 +130,14 @@ namespace TG_Bot_MVC
         // Валидация номеров замен
         private static int[] ValidateNumbersReplacementLessons(string NumbersReplacementLessons)
         {
-            var arrList = new List<int>();
+            var list = new List<int>();
 
             if (NumbersReplacementLessons.Contains(','))
             {
                 string[] temp = NumbersReplacementLessons.Split(',');
                 for (int i = 0; i < temp.Length; i++)
                 {
-                    arrList.Add(int.Parse(temp[i]));
+                    list.Add(int.Parse(temp[i]));
                 }
             }
             else if (NumbersReplacementLessons.Contains('-'))
@@ -144,13 +145,13 @@ namespace TG_Bot_MVC
                 string[] temp = NumbersReplacementLessons.Split('-');
                 for (int i = int.Parse(temp[0]); i <= int.Parse(temp[temp.Length - 1]); i++)
                 {
-                    arrList.Add(i);
+                    list.Add(i);
                 }
             }
             else
-                arrList.Add(int.Parse(NumbersReplacementLessons));
+                list.Add(int.Parse(NumbersReplacementLessons));
 
-            return arrList.ToArray();
+            return list.ToArray();
         }
 
         // Запись данных о расписании в файлы JSON
