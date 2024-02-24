@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TG_Bot_MVC", "TG_Bot_MVC\TG_Bot_MVC.csproj", "{2A252820-791D-4767-9CD1-F96EC0FFFB8B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FB4F344A-56CF-489A-9C9B-FD784ED4080B}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2A252820-791D-4767-9CD1-F96EC0FFFB8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A252820-791D-4767-9CD1-F96EC0FFFB8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A252820-791D-4767-9CD1-F96EC0FFFB8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A252820-791D-4767-9CD1-F96EC0FFFB8B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E902DD3A-6EAE-4EFB-96F4-94DB5BA19404}
+	EndGlobalSection
+EndGlobal
