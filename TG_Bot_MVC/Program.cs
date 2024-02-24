@@ -28,7 +28,7 @@ namespace TG_Bot_MVC
             //{
             //    Console.WriteLine(admin);
             //}
-            Parser.ParseHTML();
+            Parser.MainParse();
         }
     }
 }
