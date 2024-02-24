@@ -20,7 +20,7 @@ namespace TG_Bot_MVC
             try
             {
                 // Создаем объект для загрузки HTML-страницы
-                HtmlWeb web = new HtmlWeb();
+                var web = new HtmlWeb();
                 // Загружаем HTML-документ по указанному URL
                 HtmlDocument doc = web.Load(url);
 
