@@ -14,29 +14,24 @@ namespace TG_Bot_MVC
     {
         public static void MainParse()
         {
-            // URL, откуда будем загружать замены
             string url = "https://menu.sttec.yar.ru/timetable/rasp_first.html";
 
             try
             {
-                // Создаем объект для загрузки HTML-страницы
                 var web = new HtmlWeb();
-                // Загружаем HTML-документ по указанному URL
                 HtmlDocument doc = web.Load(url);
 
-                // Получение знаменателя или числителя из HTML-документа
+                // Get the denominator or numerator from an HTML document
                 string weekOfSchedule = GetWeekOfSchedule(doc);
                 Console.WriteLine(weekOfSchedule);
 
-                // Получение таблицы замен из HTML-документа
                 HtmlNode table = doc.DocumentNode.SelectSingleNode("//table");
 
                 if (table != null)
                 {
-                    // Парсинг таблицы замен и формирование словаря данных о заменах в расписании
+                    // Parse the replacement table and creating a dictionary of replacement data in the schedule
                     var groupData = ParseScheduleTable(table);
 
-                    // Запись данных о расписании в JSON файлы
                     WriteScheduleDataToJson(groupData);
 
                     Console.WriteLine("Данные о расписании успешно записаны в файлы JSON.");
@@ -52,16 +47,15 @@ namespace TG_Bot_MVC
 
         private static string GetWeekOfSchedule(HtmlDocument doc)
         {
-            // Выбираем все элементы div в HTML-документе
             var divElements = doc.DocumentNode.SelectNodes("//div");
 
-            // Ищем текст в скобках с помощью регулярного выражения
+            // Look for the text in parentheses using a regular expression
             Regex regex = new Regex(@"\((.*?)\)");
             Match match = regex.Match(divElements[3].InnerText);
 
             if (match.Success)
             {
-                // Извлекаем текст из скобок из группы с индексом 1
+                // Extract the text from the brackets
                 return match.Groups[1].Value;
             }
             else
@@ -70,35 +64,26 @@ namespace TG_Bot_MVC
 
         private static Dictionary<string, Dictionary<int, string>> ParseScheduleTable(HtmlNode table)
         {
-            // Создаем словарь, где ключом является название группы, а значением словарь пар номеров замен и соответствующих данных о заменах
+            // Creat a dictionary where the key is the name of the group, and the value is a dictionary of pairs of replacement numbers and corresponding replacement data
             var groupData = new Dictionary<string, Dictionary<int, string>>();
 
-            // Получаем коллекцию строк таблицы
             HtmlNodeCollection rows = table.SelectNodes(".//tr");
 
-            // Начинаем с 1, чтобы пропустить заголовок таблицы
+            // Start with 1 to skip the table header
             for (int i = 1; i < rows.Count; i++)
             {
-                // Получаем ячейки текущей строки
                 HtmlNodeCollection cells = rows[i].SelectNodes(".//td");
 
-                // Проверяем, что в строке есть как минимум три ячейки
                 if (cells != null && cells.Count > 2)
                 {
-                    // Проверяем, что во второй и третьей ячейках есть данные (название группы и номера замен)
                     if (!string.IsNullOrEmpty(cells[1].InnerText) && !string.IsNullOrEmpty(cells[2].InnerText))
                     {
-                        // Получаем название группы, приводим его к верхнему регистру и убираем лишние пробелы
                         string group = cells[1].InnerText.ToUpper().Trim();
-
-                        // Получение номеров замен и соответствующих данных о заменах
-                        string NumbersReplacementLessons = cells[2].InnerText;
+                        string numbersReplacementLessons = cells[2].InnerText;
                         string rowData = $"{cells[4].InnerText} {cells[5].InnerText}";
 
-                        // Валидация номеров замен
-                        int[] keys = ValidateNumbersReplacementLessons(NumbersReplacementLessons);
+                        int[] keys = ValidateNumbersReplacementLessons(numbersReplacementLessons);
 
-                        // Если группа еще не добавлена в словарь, добавляем ее
                         if (!groupData.TryGetValue(group, out Dictionary<int, string>? value))
                         {
                             value = new Dictionary<int, string>()
@@ -114,7 +99,7 @@ namespace TG_Bot_MVC
                             groupData[group] = value;
                         }
 
-                        // Записываем данные о заменах в словарь
+                        // Write data about substitutions in the dictionary
                         foreach (int key in keys)
                         {
                             value[key] = rowData;
@@ -122,39 +107,37 @@ namespace TG_Bot_MVC
                     }
                 }
                 else
-                    throw new Exception("Ячеек меньше 3");
+                    throw new Exception("Ячеек в таблице меньше 3");
             }
             return groupData;
         }
 
-        // Валидация номеров замен
-        private static int[] ValidateNumbersReplacementLessons(string NumbersReplacementLessons)
+        private static int[] ValidateNumbersReplacementLessons(string numbersReplacementLessons)
         {
             var list = new List<int>();
 
-            if (NumbersReplacementLessons.Contains(','))
+            if (numbersReplacementLessons.Contains(','))
             {
-                string[] temp = NumbersReplacementLessons.Split(',');
+                string[] temp = numbersReplacementLessons.Split(',');
                 for (int i = 0; i < temp.Length; i++)
                 {
                     list.Add(int.Parse(temp[i]));
                 }
             }
-            else if (NumbersReplacementLessons.Contains('-'))
+            else if (numbersReplacementLessons.Contains('-'))
             {
-                string[] temp = NumbersReplacementLessons.Split('-');
+                string[] temp = numbersReplacementLessons.Split('-');
                 for (int i = int.Parse(temp[0]); i <= int.Parse(temp[temp.Length - 1]); i++)
                 {
                     list.Add(i);
                 }
             }
             else
-                list.Add(int.Parse(NumbersReplacementLessons));
+                list.Add(int.Parse(numbersReplacementLessons));
 
             return list.ToArray();
         }
 
-        // Запись данных о расписании в файлы JSON
         private static void WriteScheduleDataToJson(Dictionary<string, Dictionary<int, string>> groupData)
         {
             foreach (var kvp in groupData)
@@ -164,9 +147,8 @@ namespace TG_Bot_MVC
 
                 if (rowDataDict.Count > 0)
                 {
-                    // Сериализация данных в JSON формат и запись в файл
                     string json = JsonConvert.SerializeObject(rowDataDict, Newtonsoft.Json.Formatting.Indented);
-                    File.WriteAllText($"row_data_{group}.json", json);
+                    File.WriteAllText($"{group}.json", json);
                 }
                 else
                     throw new Exception($"Для группы {group} не найдены строки, удовлетворяющие условиям.");
