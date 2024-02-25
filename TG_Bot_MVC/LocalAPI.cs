@@ -39,12 +39,59 @@ namespace TG_Bot_MVC
             _context.SaveChanges();
         }
 
-        public List<User> GetUsers()
+        public User? GetUser(int userId)
         {
-            var users = _context.Users
+            return _context.Users
                 .Include(u => u.Status)
-                .ToList();
-            return users;
+                .FirstOrDefault(u => u.IdUser == userId);
+        }
+
+        public int TryGetGroupId(string groupName)
+        {
+            var group = _context.Groups.FirstOrDefault(g => g.GroupName == groupName);
+            if (group is null)
+            {
+                AddGroup(groupName);
+            }
+            return _context.Groups.FirstOrDefault(g => g.GroupName == groupName).IdGroup;
+        }
+
+        public void AddGroup(string groupName)
+        {
+            var newGroup = new Group
+            {
+                GroupName = groupName,
+            };
+
+            _context.Groups.Add(newGroup);
+            _context.SaveChanges();
+        }
+        
+        public int GetWeekOfScheduleId(string weekOfScheduleName)
+        {
+            return _context.WeekOfSchedules.FirstOrDefault(w => w.WeekOfScheduleName ==  weekOfScheduleName).IdWeekOfSchedule;
+        }
+
+        public ReplasementLesson? GetReplasementLesson(int groupId)
+        {
+            return _context.ReplasementLessons
+                .Include(r => r.Group)
+                .Include(r => r.WeekOfSchedule)
+                .FirstOrDefault(r => r.GroupId == groupId);
+        }
+
+        public void AddReplasementLesson(int groupId, int weekOfScheduleId, string serializeDataLesson)
+        {
+            var replasementLesson = new ReplasementLesson
+            {
+                GroupId = groupId,
+                WeekOfScheduleId = weekOfScheduleId,
+                Weekday = (int)DateTime.Today.DayOfWeek,
+                SerializeDataLessons = serializeDataLesson
+            };
+
+            _context.ReplasementLessons.Add(replasementLesson);
+            _context.SaveChanges();
         }
 
     }

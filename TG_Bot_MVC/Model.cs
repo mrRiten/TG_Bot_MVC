@@ -175,7 +175,7 @@ namespace TG_Bot_MVC
         public List<ReplasementLesson> ReplasementLessons { get; set; }
         public List<CorrectSchedule> CorrectSchedules { get; set; }
 
-        public int DepartmentId { get; set; }
+        public int? DepartmentId { get; set; }
         public Department Department { get; set; }
     }
 

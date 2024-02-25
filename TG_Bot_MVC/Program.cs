@@ -12,23 +12,28 @@ namespace TG_Bot_MVC
             //var localAPI = new LocalAPI(context);
             //var configWorker = new ConfigWorker();
 
-            //var users = localAPI.GetUsers();
+            var user = localAPI.GetUser(1);
 
-            //foreach (var user in users)
-            //{
-            //    Console.WriteLine($"{user.UserName} - {user.IdUser} - {user.Status.StatusName}");
-            //}
+            Console.WriteLine($"{user.UserName} - {user.IdUser} - {user.Status.StatusName}");
 
             //Console.WriteLine(configWorker.GetConnectionString());
             //Console.WriteLine(configWorker.GetLoggerString());
             //Console.WriteLine(configWorker.GetBotToken());
 
-            //var Admins = configWorker.GetAdmins();
-            //foreach (var admin in Admins)
-            //{
-            //    Console.WriteLine(admin);
-            //}
-            Parser.MainParse();
+            var Admins = configWorker.GetAdmins();
+            foreach (var admin in Admins)
+            {
+                Console.WriteLine(admin);
+            }
+
+            //localAPI.AddReplasementLesson(
+            //    localAPI.TryGetGroupId("ИС1-21"),
+            //    localAPI.GetWeekOfScheduleId("Знаменатель"),
+            //    "{ {} {} {} {} {} {} {} {} }"
+            //    );
+
+            var repl = localAPI.GetReplasementLesson(1);
+            Console.WriteLine($"{repl.WeekOfSchedule.WeekOfScheduleName} {repl.Group.GroupName} - {repl.SerializeDataLessons}");
         }
     }
 }
