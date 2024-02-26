@@ -8,8 +8,8 @@ namespace TG_Bot_MVC
         static void Main(string[] args)
         {
             // Example how to use any class
-            var context = new LibraryContext();
-            var localAPI = new LocalAPI(context);
+            //var context = new LibraryContext();
+            //var localAPI = new LocalAPI(context);
             //var configWorker = new ConfigWorker();
 
             //var user = localAPI.GetUser(1);
@@ -25,12 +25,12 @@ namespace TG_Bot_MVC
             //{
             //    Console.WriteLine(admin);
             //}
-
-            localAPI.AddReplasementLesson(
-                localAPI.TryGetGroupId(Parser.Group),
-                localAPI.GetWeekOfScheduleId(Parser.WeekOfSchedule), 
-                Parser.Json
-                );
+            //Parser.MainParse();
+            //localAPI.AddReplasementLesson(
+            //    localAPI.TryGetGroupId(Parser.Group),
+            //    localAPI.GetWeekOfScheduleId(Parser.WeekOfSchedule), 
+            //    Parser.Json
+            //    );
 
             //var repl = localAPI.GetReplasementLesson(1);
             //Console.WriteLine($"{repl.WeekOfSchedule.WeekOfScheduleName} {repl.Group.GroupName} - {repl.SerializeDataLessons}");

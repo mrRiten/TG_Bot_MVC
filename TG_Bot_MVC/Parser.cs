@@ -6,8 +6,8 @@ namespace TG_Bot_MVC
     internal static class Parser
     {
         public static string Group { get; private set; }
-        public static string WeekOfSchedule {  get; private set; }
-        public static string Json {  get; private set; }
+        public static string WeekOfSchedule { get; private set; }
+        public static string Json { get; private set; }
 
         public static void MainParse()
         {
@@ -143,7 +143,7 @@ namespace TG_Bot_MVC
 
                 if (rowDataDict.Count > 0)
                 {
-                    string Json = Serializer.SerializeJson(rowDataDict);
+                    Json = Serializer.SerializeJson(rowDataDict);
                     File.WriteAllText($"{group}.json", Json);
                 }
                 else
