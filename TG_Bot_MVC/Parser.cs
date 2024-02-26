@@ -1,17 +1,14 @@
 ﻿using HtmlAgilityPack;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Xml;
 
 namespace TG_Bot_MVC
 {
     internal static class Parser
     {
+        public static string Group { get; private set; }
+        public static string WeekOfSchedule {  get; private set; }
+        public static string Json {  get; private set; }
+
         public static void MainParse()
         {
             string url = "https://menu.sttec.yar.ru/timetable/rasp_first.html";
@@ -22,8 +19,7 @@ namespace TG_Bot_MVC
                 HtmlDocument doc = web.Load(url);
 
                 // Get the denominator or numerator from an HTML document
-                string weekOfSchedule = GetWeekOfSchedule(doc);
-                Console.WriteLine(weekOfSchedule);
+                WeekOfSchedule = GetWeekOfSchedule(doc);
 
                 HtmlNode table = doc.DocumentNode.SelectSingleNode("//table");
 
@@ -52,7 +48,7 @@ namespace TG_Bot_MVC
             // Look for the text in parentheses using a regular expression
             Regex regex = new Regex(@"\((.*?)\)");
             Match match = regex.Match(divElements[3].InnerText);
-
+            
             if (match.Success)
             {
                 // Extract the text from the brackets
@@ -78,13 +74,13 @@ namespace TG_Bot_MVC
                 {
                     if (!string.IsNullOrEmpty(cells[1].InnerText) && !string.IsNullOrEmpty(cells[2].InnerText))
                     {
-                        string group = cells[1].InnerText.ToUpper().Trim();
+                        Group = cells[1].InnerText.ToUpper().Trim();
                         string numbersReplacementLessons = cells[2].InnerText;
                         string rowData = $"{cells[4].InnerText} {cells[5].InnerText}";
 
                         int[] keys = ValidateNumbersReplacementLessons(numbersReplacementLessons);
 
-                        if (!groupData.TryGetValue(group, out Dictionary<int, string>? value))
+                        if (!groupData.TryGetValue(Group, out Dictionary<int, string>? value))
                         {
                             value = new Dictionary<int, string>()
                             {
@@ -96,7 +92,7 @@ namespace TG_Bot_MVC
                                 { 5, null },
                                 { 6, null }
                             };
-                            groupData[group] = value;
+                            groupData[Group] = value;
                         }
 
                         // Write data about substitutions in the dictionary
@@ -147,8 +143,8 @@ namespace TG_Bot_MVC
 
                 if (rowDataDict.Count > 0)
                 {
-                    string json = JsonConvert.SerializeObject(rowDataDict, Newtonsoft.Json.Formatting.Indented);
-                    File.WriteAllText($"{group}.json", json);
+                    string Json = Serializer.SerializeJson(rowDataDict);
+                    File.WriteAllText($"{group}.json", Json);
                 }
                 else
                     throw new Exception($"Для группы {group} не найдены строки, удовлетворяющие условиям.");

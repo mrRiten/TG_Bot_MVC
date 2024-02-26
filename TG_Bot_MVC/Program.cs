@@ -8,32 +8,33 @@ namespace TG_Bot_MVC
         static void Main(string[] args)
         {
             // Example how to use any class
-            //var context = new LibraryContext();
-            //var localAPI = new LocalAPI(context);
+            var context = new LibraryContext();
+            var localAPI = new LocalAPI(context);
             //var configWorker = new ConfigWorker();
 
-            var user = localAPI.GetUser(1);
+            //var user = localAPI.GetUser(1);
 
-            Console.WriteLine($"{user.UserName} - {user.IdUser} - {user.Status.StatusName}");
+            //Console.WriteLine($"{user.UserName} - {user.IdUser} - {user.Status.StatusName}");
 
             //Console.WriteLine(configWorker.GetConnectionString());
             //Console.WriteLine(configWorker.GetLoggerString());
             //Console.WriteLine(configWorker.GetBotToken());
 
-            var Admins = configWorker.GetAdmins();
-            foreach (var admin in Admins)
-            {
-                Console.WriteLine(admin);
-            }
+            // var Admins = configWorker.GetAdmins();
+            //foreach (var admin in Admins)
+            //{
+            //    Console.WriteLine(admin);
+            //}
 
-            //localAPI.AddReplasementLesson(
-            //    localAPI.TryGetGroupId("ИС1-21"),
-            //    localAPI.GetWeekOfScheduleId("Знаменатель"),
-            //    "{ {} {} {} {} {} {} {} {} }"
-            //    );
+            localAPI.AddReplasementLesson(
+                localAPI.TryGetGroupId(Parser.Group),
+                localAPI.GetWeekOfScheduleId(Parser.WeekOfSchedule), 
+                Parser.Json
+                );
 
-            var repl = localAPI.GetReplasementLesson(1);
-            Console.WriteLine($"{repl.WeekOfSchedule.WeekOfScheduleName} {repl.Group.GroupName} - {repl.SerializeDataLessons}");
+            //var repl = localAPI.GetReplasementLesson(1);
+            //Console.WriteLine($"{repl.WeekOfSchedule.WeekOfScheduleName} {repl.Group.GroupName} - {repl.SerializeDataLessons}");
+
         }
     }
 }
