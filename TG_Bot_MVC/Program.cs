@@ -32,8 +32,20 @@ namespace TG_Bot_MVC
             //    "{ {} {} {} {} {} {} {} {} }"
             //    );
 
-            var repl = localAPI.GetReplasementLesson(1);
+            var repl = localAPI.GetReplasementLesson(1, (int)DayOfWeek.Sunday);
             Console.WriteLine($"{repl.WeekOfSchedule.WeekOfScheduleName} {repl.Group.GroupName} - {repl.SerializeDataLessons}");
+
+            //localAPI.AddUserSetting(2, 1);
+
+            var userFull = localAPI.GetFullInfoUser(2);
+            Console.WriteLine($"{userFull.IdUser} {userFull.UserName} {userFull.Status.StatusName} {userFull.Setting.IdSetting} {userFull.Setting.Group.Department.DepartmentName}");
+
+            localAPI.SetMailingSetting(2, false);
+            localAPI.SetTimeOfLessonsSetting(2, false);
+            localAPI.SetGroupSetting(2, 2);
+
+            userFull = localAPI.GetFullInfoUser(2);
+            Console.WriteLine($"{userFull.IdUser} {userFull.UserName} {userFull.Status.StatusName} {userFull.Setting.IdSetting} {userFull.Setting.Group.Department.DepartmentName}");
         }
     }
 }
