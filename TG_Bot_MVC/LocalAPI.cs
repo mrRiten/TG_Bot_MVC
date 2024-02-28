@@ -1,9 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TG_Bot_MVC
 {
@@ -80,19 +75,29 @@ namespace TG_Bot_MVC
                 .FirstOrDefault(r => r.GroupId == groupId && r.Weekday == weekday);
         }
 
-        // TODO: create methods AddReplasementLesson for next day : create new static class with method InsureCorrectDate(Date)
-        public void AddReplasementLesson(int groupId, int weekOfScheduleId, string serializeDataLesson)
+        public void AddReplasementLesson(int groupId, int weekOfScheduleId, string serializeDataLesson, DateTime dateTime)
         {
             var replasementLesson = new ReplasementLesson
             {
                 GroupId = groupId,
                 WeekOfScheduleId = weekOfScheduleId,
-                Weekday = (int)DateTime.Today.DayOfWeek,
+                Weekday = (int)dateTime.DayOfWeek,
                 SerializeDataLessons = serializeDataLesson
             };
 
             _context.ReplasementLessons.Add(replasementLesson);
             _context.SaveChanges();
+        }
+
+        public void DelReplasementLessons(DateTime dateTime)
+        {
+            var schedule = _context.ReplasementLessons.Where(rl => rl.Weekday == (int)dateTime.DayOfWeek);
+
+            if (schedule.Any())
+            {
+                _context.ReplasementLessons.RemoveRange(schedule);
+                _context.SaveChanges();
+            }
         }
 
         public DefaultSchedule? GetDefaultSchedule(int IdGroup, int weekday)
@@ -105,19 +110,29 @@ namespace TG_Bot_MVC
             return _context.CorrectSchedules.FirstOrDefault(cs => cs.GroupId == IdGroup && cs.Weekday == weekday);
         }
 
-        // TODO: create methods SetCorrectSchedule for next day : create new static class with method InsureCorrectDate(Date)
-        public void SetCorrectSchedule(int IdGoup, int weekOfScheduleId, string serializeDataLesson)
+        public void SetCorrectSchedule(int IdGoup, int weekOfScheduleId, string serializeDataLesson, DateTime dateTime)
         {
             var correctSchedule = new CorrectSchedule
             {
                 GroupId = IdGoup,
                 WeekOfScheduleId = weekOfScheduleId,
-                Weekday = (int)DateTime.Today.DayOfWeek,
+                Weekday = (int)dateTime.DayOfWeek,
                 SerializeDataLessons = serializeDataLesson
             };
 
-
+            _context.CorrectSchedules.Add(correctSchedule);
             _context.SaveChanges();
+        }
+
+        public void DelCorrectSchedules(DateTime dateTime)
+        {
+            var schedules = _context.CorrectSchedules.Where(cs => cs.Weekday == (int)dateTime.DayOfWeek);
+
+            if (schedules.Any())
+            {
+                _context.CorrectSchedules.RemoveRange(schedules);
+                _context.SaveChanges();
+            }
         }
 
         public User? GetFullUser(int IdUser)

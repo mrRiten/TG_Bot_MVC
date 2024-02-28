@@ -1,51 +1,40 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Security.Policy;
+﻿using Telegram.Bot;
+using Telegram.Bot.Polling;
+using Telegram.Bot.Types.Enums;
+using TG_Bot_MVC;
 
-namespace TG_Bot_MVC
+var veiw = new BotVeiw();
+var controller = new ProgramController(veiw);
+
+await RunBot(controller);
+
+async Task RunBot(ProgramController controller)
 {
-    internal class Program
+    var _configWorker = new ConfigWorker();
+
+    var bot = new TelegramBotClient(_configWorker.GetBotToken());
+
+    veiw._bot = bot;
+
+    using CancellationTokenSource cts = new();
+
+    ReceiverOptions receiverOptions = new()
     {
-        static void Main(string[] args)
-        {
-            // Example how to use any class
-            var context = new LibraryContext();
-            var localAPI = new LocalAPI(context);
-            var configWorker = new ConfigWorker();
+        AllowedUpdates = Array.Empty<UpdateType>()
+    };
 
-            var user = localAPI.GetUser(1);
+    bot.StartReceiving(
+        updateHandler: controller.BotController,
+        pollingErrorHandler: controller.ErrorBotController,
+        receiverOptions: receiverOptions,
+        cancellationToken: cts.Token
+        );
 
-            Console.WriteLine($"{user.UserName} - {user.IdUser} - {user.Status.StatusName}");
+    var me = await bot.GetMeAsync();
 
-            Console.WriteLine(configWorker.GetConnectionString());
-            Console.WriteLine(configWorker.GetLoggerString());
-            Console.WriteLine(configWorker.GetBotToken());
+    Console.WriteLine($"Bot with name: @{me.Username} is runing");
+    Console.ReadLine();
 
-            var Admins = configWorker.GetAdmins();
-            foreach (var admin in Admins)
-            {
-                Console.WriteLine(admin);
-            }
-
-            //localAPI.AddReplasementLesson(
-            //    localAPI.TryGetGroupId("ИС1-21"),
-            //    localAPI.GetWeekOfScheduleId("Знаменатель"),
-            //    "{ {} {} {} {} {} {} {} {} }"
-            //    );
-
-            var repl = localAPI.GetReplasementLesson(1, (int)DayOfWeek.Sunday);
-            Console.WriteLine($"{repl.WeekOfSchedule.WeekOfScheduleName} {repl.Group.GroupName} - {repl.SerializeDataLessons}");
-
-            //localAPI.AddUserSetting(2, 1);
-
-            var userFull = localAPI.GetFullInfoUser(2);
-            Console.WriteLine($"{userFull.IdUser} {userFull.UserName} {userFull.Status.StatusName} {userFull.Setting.IdSetting} {userFull.Setting.Group.Department.DepartmentName}");
-
-            localAPI.SetMailingSetting(2, false);
-            localAPI.SetTimeOfLessonsSetting(2, false);
-            localAPI.SetGroupSetting(2, 2);
-
-            userFull = localAPI.GetFullInfoUser(2);
-            Console.WriteLine($"{userFull.IdUser} {userFull.UserName} {userFull.Status.StatusName} {userFull.Setting.IdSetting} {userFull.Setting.Group.Department.DepartmentName}");
-        }
-    }
+    // Send cancellation request to stop bot
+    cts.Cancel();
 }
