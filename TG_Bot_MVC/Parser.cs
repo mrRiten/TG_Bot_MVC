@@ -1,17 +1,15 @@
 ﻿using HtmlAgilityPack;
+using Mysqlx.Resultset;
 using System.Text.RegularExpressions;
+using Telegram.Bot.Types.InlineQueryResults;
 
 namespace TG_Bot_MVC
 {
-    internal static class Parser
+    internal class Parser
     {
-        public static string Group { get; private set; }
-        public static string WeekOfSchedule { get; private set; }
-        public static string Json { get; private set; }
-
         public static void MainParse()
         {
-            string url = "https://menu.sttec.yar.ru/timetable/rasp_first.html";
+            const string url = "https://menu.sttec.yar.ru/timetable/rasp_first.html";
 
             try
             {
@@ -19,7 +17,7 @@ namespace TG_Bot_MVC
                 HtmlDocument doc = web.Load(url);
 
                 // Get the denominator or numerator from an HTML document
-                WeekOfSchedule = GetWeekOfSchedule(doc);
+                string weekOfSchedule = GetWeekOfSchedule(doc);
 
                 HtmlNode table = doc.DocumentNode.SelectSingleNode("//table");
 
@@ -28,9 +26,24 @@ namespace TG_Bot_MVC
                     // Parse the replacement table and creating a dictionary of replacement data in the schedule
                     var groupData = ParseScheduleTable(table);
 
-                    WriteScheduleDataToJson(groupData);
+                    string[] json = SerializeDictToArrString(groupData);
 
-                    Console.WriteLine("Данные о расписании успешно записаны в файлы JSON.");
+                    var context = new LibraryContext();
+                    var localAPI = new LocalAPI(context);
+
+                    int i = 0;
+                    foreach (var item in groupData.Keys)
+                    {
+                        Console.WriteLine($"{item} - {json[i]}");
+                        localAPI.AddReplasementLesson(
+                            localAPI.TryGetGroupId(item),
+                            localAPI.GetWeekOfScheduleId(weekOfSchedule),
+                            json[i]
+                        );
+                        i++;
+                    }
+
+                    Console.WriteLine("Успех");
                 }
                 else
                     throw new Exception("Таблица не найдена.");
@@ -60,27 +73,27 @@ namespace TG_Bot_MVC
 
         private static Dictionary<string, Dictionary<int, string>> ParseScheduleTable(HtmlNode table)
         {
-            // Creat a dictionary where the key is the name of the group, and the value is a dictionary of pairs of replacement numbers and corresponding replacement data
+            // Create a dictionary where the key is the name of the group, and the value is a dictionary of pairs of replacement numbers and corresponding replacement data
             var groupData = new Dictionary<string, Dictionary<int, string>>();
 
             HtmlNodeCollection rows = table.SelectNodes(".//tr");
 
             // Start with 1 to skip the table header
-            for (int i = 1; i < rows.Count; i++)
+            foreach (var row in rows.Skip(1))
             {
-                HtmlNodeCollection cells = rows[i].SelectNodes(".//td");
+                HtmlNodeCollection cells = row.SelectNodes(".//td");
 
                 if (cells != null && cells.Count > 2)
                 {
                     if (!string.IsNullOrEmpty(cells[1].InnerText) && !string.IsNullOrEmpty(cells[2].InnerText))
                     {
-                        Group = cells[1].InnerText.ToUpper().Trim();
+                        string group = cells[1].InnerText.ToUpper().Trim();
                         string numbersReplacementLessons = cells[2].InnerText;
                         string rowData = $"{cells[4].InnerText} {cells[5].InnerText}";
 
                         int[] keys = ValidateNumbersReplacementLessons(numbersReplacementLessons);
 
-                        if (!groupData.TryGetValue(Group, out Dictionary<int, string>? value))
+                        if (!groupData.TryGetValue(group, out Dictionary<int, string>? value))
                         {
                             value = new Dictionary<int, string>()
                             {
@@ -92,7 +105,7 @@ namespace TG_Bot_MVC
                                 { 5, null },
                                 { 6, null }
                             };
-                            groupData[Group] = value;
+                            groupData[group] = value;
                         }
 
                         // Write data about substitutions in the dictionary
@@ -128,27 +141,21 @@ namespace TG_Bot_MVC
                     list.Add(i);
                 }
             }
-            else
+            else if (numbersReplacementLessons.Length == 1)
                 list.Add(int.Parse(numbersReplacementLessons));
-
+            else
+                throw new Exception("Неверный формат номера пары в таблице");
             return list.ToArray();
         }
 
-        private static void WriteScheduleDataToJson(Dictionary<string, Dictionary<int, string>> groupData)
+        private static string[] SerializeDictToArrString(Dictionary<string, Dictionary<int, string>> rowDataDict)
         {
-            foreach (var kvp in groupData)
+            var json = new List<string>();
+            foreach (var item in rowDataDict)
             {
-                string group = kvp.Key;
-                var rowDataDict = kvp.Value;
-
-                if (rowDataDict.Count > 0)
-                {
-                    Json = Serializer.SerializeJson(rowDataDict);
-                    File.WriteAllText($"{group}.json", Json);
-                }
-                else
-                    throw new Exception($"Для группы {group} не найдены строки, удовлетворяющие условиям.");
+                json.Add(Serializer.SerializeJson(item.Value));
             }
+            return json.ToArray();
         }
     }
 }

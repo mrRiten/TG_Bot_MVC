@@ -25,16 +25,14 @@ namespace TG_Bot_MVC
             //{
             //    Console.WriteLine(admin);
             //}
-            //Parser.MainParse();
             //localAPI.AddReplasementLesson(
             //    localAPI.TryGetGroupId(Parser.Group),
             //    localAPI.GetWeekOfScheduleId(Parser.WeekOfSchedule), 
             //    Parser.Json
             //    );
-
+            Parser.MainParse();
             //var repl = localAPI.GetReplasementLesson(1);
             //Console.WriteLine($"{repl.WeekOfSchedule.WeekOfScheduleName} {repl.Group.GroupName} - {repl.SerializeDataLessons}");
-
         }
     }
 }
