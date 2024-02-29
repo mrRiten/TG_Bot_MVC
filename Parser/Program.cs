@@ -43,7 +43,7 @@ namespace Parser
             {
                 Console.WriteLine($"Произошла ошибка: {ex.Message}");
                 Thread.Sleep(1800000);
-                Main([]);
+                Main(args);
             }
         }
 
