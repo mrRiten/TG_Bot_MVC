@@ -2,7 +2,7 @@
 
 namespace TG_Bot_MVC
 {
-    internal class LocalAPI
+    public class LocalAPI
     {
         private readonly LibraryContext _context;
 

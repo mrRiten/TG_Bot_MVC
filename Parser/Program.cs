@@ -1,8 +1,5 @@
 ﻿using HtmlAgilityPack;
-using Mysqlx.Resultset;
 using System.Text.RegularExpressions;
-using Telegram.Bot.Types.InlineQueryResults;
-
 namespace TG_Bot_MVC
 {
     internal class Parser
@@ -28,25 +25,11 @@ namespace TG_Bot_MVC
 
                     string[] json = SerializeDictToArrString(groupData);
 
-                    var context = new LibraryContext();
-                    var localAPI = new LocalAPI(context);
+                    Console.WriteLine("Parsing!");
 
-                    DateTime today = DateTime.Today;
-                    
-                    int i = 0;
-                    foreach (var item in groupData.Keys)
-                    {
-                        Console.WriteLine($"{item} - {json[i]}");
-                        localAPI.AddReplasementLesson(
-                            localAPI.TryGetGroupId(item),
-                            localAPI.GetWeekOfScheduleId(weekOfSchedule),
-                            json[i],
-                            today
-                        );
-                        i++;
-                    }
+                    WriteToDatabase(groupData, json, weekOfSchedule);
 
-                    Console.WriteLine("Успех");
+                    Console.WriteLine("Write to database");
                 }
                 else
                     throw new Exception("Таблица не найдена.");
@@ -64,7 +47,7 @@ namespace TG_Bot_MVC
             // Look for the text in parentheses using a regular expression
             Regex regex = new Regex(@"\((.*?)\)");
             Match match = regex.Match(divElements[3].InnerText);
-            
+
             if (match.Success)
             {
                 // Extract the text from the brackets
@@ -159,6 +142,27 @@ namespace TG_Bot_MVC
                 json.Add(Serializer.SerializeJson(item.Value));
             }
             return json.ToArray();
+        }
+        private static void WriteToDatabase(Dictionary<string, Dictionary<int, string>> groupData, string[] json, string weekOfSchedule)
+        {
+            
+            var context = new LibraryContext();
+            var localAPI = new LocalAPI(context);
+
+            DateTime today = DateTime.Today;
+
+            int i = 0;
+            foreach (var item in groupData.Keys)
+            {
+                Console.WriteLine($"{item} - {json[i]}");
+                localAPI.AddReplasementLesson(
+                    localAPI.TryGetGroupId(item),
+                    localAPI.GetWeekOfScheduleId(weekOfSchedule),
+                    json[i],
+                    today
+                );
+                i++;
+            }
         }
     }
 }

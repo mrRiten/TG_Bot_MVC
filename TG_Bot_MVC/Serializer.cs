@@ -2,7 +2,7 @@
 
 namespace TG_Bot_MVC
 {
-    internal static class Serializer
+    public static class Serializer
     {
         public static string SerializeJson(object data)
         {

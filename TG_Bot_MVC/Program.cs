@@ -11,7 +11,7 @@ await RunBot(controller);
 async Task RunBot(ProgramController controller)
 {
     var _configWorker = new ConfigWorker();
-
+    
     var bot = new TelegramBotClient(_configWorker.GetBotToken());
 
     veiw._bot = bot;
