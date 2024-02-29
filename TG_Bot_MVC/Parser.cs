@@ -31,6 +31,8 @@ namespace TG_Bot_MVC
                     var context = new LibraryContext();
                     var localAPI = new LocalAPI(context);
 
+                    DateTime today = DateTime.Today;
+                    
                     int i = 0;
                     foreach (var item in groupData.Keys)
                     {
@@ -38,7 +40,8 @@ namespace TG_Bot_MVC
                         localAPI.AddReplasementLesson(
                             localAPI.TryGetGroupId(item),
                             localAPI.GetWeekOfScheduleId(weekOfSchedule),
-                            json[i]
+                            json[i],
+                            today
                         );
                         i++;
                     }

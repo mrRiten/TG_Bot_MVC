@@ -81,8 +81,8 @@ namespace TG_Bot_MVC
             {
                 GroupId = groupId,
                 WeekOfScheduleId = weekOfScheduleId,
-                Weekday = (int)dateTime.DayOfWeek,
-                SerializeDataLessons = serializeDataLesson
+                SerializeDataLessons = serializeDataLesson,
+                Weekday = (int)dateTime.DayOfWeek
             };
 
             _context.ReplasementLessons.Add(replasementLesson);
