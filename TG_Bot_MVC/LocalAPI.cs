@@ -22,11 +22,19 @@ namespace TG_Bot_MVC
             _context.SaveChanges();
         }
 
-        public void AddUser(string username, long userTGId)
+        public void SetStatus(long userIdTg, int statusId)
+        {
+            var user = _context.Users.Where(u => u.UserTGId == userIdTg).FirstOrDefault();
+            user.StatusId = statusId;
+
+            _context.SaveChanges(); 
+        }
+
+        public void AddUser(string userName, long userTGId)
         {
             var user = new User
             {
-                UserName = username,
+                UserName = userName,
                 UserTGId = userTGId,
             };
 
@@ -39,6 +47,16 @@ namespace TG_Bot_MVC
             return _context.Users
                 .Include(u => u.Status)
                 .FirstOrDefault(u => u.IdUser == userId);
+        }
+
+        public User? TryGetUser(long userIdTg, string userName)
+        {
+            var user = _context.Users.Where(u => u.UserTGId == userIdTg).FirstOrDefault();
+            if (user is null)
+            {
+                AddUser(userName, userIdTg);
+            }
+            return _context.Users.Where(u => u.UserTGId == userIdTg).Include(u => u.Status).FirstOrDefault();
         }
 
         public int TryGetGroupId(string groupName)
@@ -143,14 +161,14 @@ namespace TG_Bot_MVC
                 .FirstOrDefault(u => u.IdUser == IdUser);
         }
 
-        public User? GetFullInfoUser(int IdUser)
+        public User? GetFullInfoUser(long userTgId)
         {
             return _context.Users
                 .Include(u => u.Status)
                 .Include(u => u.Setting)
                 .ThenInclude(u => u.Group)
                 .ThenInclude(g => g.Department)
-                .FirstOrDefault(u => u.IdUser == IdUser);
+                .FirstOrDefault(u => u.UserTGId == userTgId);
         }
 
         public void AddUserSetting(int IdUser, int IdGroup)

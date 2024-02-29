@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using Org.BouncyCastle.Pqc.Crypto;
+using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 
@@ -8,11 +9,13 @@ namespace TG_Bot_MVC
     {
         private readonly BotVeiw _botVeiw;
         private readonly ConfigWorker _configWorker;
+        private readonly LocalAPI _localAPI;
 
         public ProgramController(BotVeiw botVeiw)
         {
             _botVeiw = botVeiw;
             _configWorker = new ConfigWorker();
+            _localAPI = new LocalAPI(new LibraryContext());
         }
 
         internal async Task BotController(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
@@ -22,9 +25,23 @@ namespace TG_Bot_MVC
             if (message.Text is not { } messageText)
                 return;
 
-            var chatId = message.Chat.Id;
+            var chatId = update.Message.Chat.Id;
 
-            await _botVeiw.SendDefaultResponse(chatId, messageText, cancellationToken);
+            // Init ALL IMessageHandler
+            IUpdateHandler testHandler = new TestHandler(null, _localAPI);  // MAIN Handler
+            IUpdateHandler handler = new MainHandler(testHandler, _localAPI);  // for test
+
+            if (handler.Active(update.Message))
+            {
+                if (messageText.StartsWith("/"))
+                {
+                    await _botVeiw.SendCommandResponse(chatId, messageText, cancellationToken);
+                }
+                else
+                {
+                    await _botVeiw.SendDefaultResponse(chatId, messageText, cancellationToken);
+                }
+            }
         }
 
         internal Task ErrorBotController(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)

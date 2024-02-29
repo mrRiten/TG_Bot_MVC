@@ -13,10 +13,20 @@ namespace TG_Bot_MVC
             {
                 new KeyboardButton[] { "📑 Расписание" },
                 ["⬅️ Предыдущее", "Следующее ➡️"],
+                ["⚙️ Настройки"]
             })
         {
             ResizeKeyboard = true
         };
+
+        readonly InlineKeyboardMarkup inlineKeyboardSetting = new(new[]
+        {
+            new[]
+            {
+                InlineKeyboardButton.WithCallbackData(text: "Group", callbackData: "Group"),
+                InlineKeyboardButton.WithCallbackData(text: "Departmetn", callbackData: "Departmetn"),
+            }
+        });
 
         public async Task SendDefaultResponse(long IdChat, string response, CancellationToken cancellationToken)
         {
@@ -36,7 +46,8 @@ namespace TG_Bot_MVC
 
             Message message = await _bot.SendTextMessageAsync(
                 chatId: IdChat,
-                text: response,
+                text: "Command!",
+                replyMarkup: inlineKeyboardSetting,
                 parseMode: ParseMode.Markdown,
                 cancellationToken: cancellationToken);
         }
