@@ -41,7 +41,7 @@ namespace Parser
             {
                 Console.WriteLine($"Произошла ошибка: {ex.Message}");
                 Thread.Sleep(1800000);
-                MainParse(url);
+                Main(args);
             }
         }
 
