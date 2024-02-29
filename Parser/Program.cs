@@ -1,12 +1,13 @@
 ﻿using HtmlAgilityPack;
 using System.Text.RegularExpressions;
+
 namespace TG_Bot_MVC
 {
     internal class Parser
     {
-        public static void MainParse()
+        public static void MainParse(string url)
         {
-            const string url = "https://menu.sttec.yar.ru/timetable/rasp_first.html";
+            //"https://menu.sttec.yar.ru/timetable/rasp_first.html";
 
             try
             {
