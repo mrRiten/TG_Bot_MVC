@@ -39,7 +39,7 @@ namespace TG_Bot_MVC
             {
                 Console.WriteLine($"Произошла ошибка: {ex.Message}");
                 Thread.Sleep(1800000);
-                MainParse();
+                MainParse(url);
             }
         }
 
