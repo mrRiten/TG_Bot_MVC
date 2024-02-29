@@ -159,7 +159,6 @@ namespace TG_Bot_MVC
         public int StatusId { get; set; } = 1;
         public Status Status { get; set; }
 
-        public int? SettingId {  get; set; }
         public Setting Setting { get; set; }
 
     }
