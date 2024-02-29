@@ -1,13 +1,17 @@
 ﻿using HtmlAgilityPack;
+using Newtonsoft.Json;
 using System.Text.RegularExpressions;
+using TG_Bot_MVC;
 
-namespace TG_Bot_MVC
+namespace Parser
 {
-    internal class Parser
+    internal class Program
     {
-        public static void MainParse(string url)
+        static void Main(string[] args)
         {
-            //"https://menu.sttec.yar.ru/timetable/rasp_first.html";
+            //https://menu.sttec.yar.ru/timetable/rasp_first.html
+            //https://menu.sttec.yar.ru/timetable/rasp_second.html
+            const string url = "https://menu.sttec.yar.ru/timetable/rasp_first.html";
 
             try
             {
@@ -30,7 +34,7 @@ namespace TG_Bot_MVC
 
                     WriteToDatabase(groupData, json, weekOfSchedule);
 
-                    Console.WriteLine("Write to database");
+                    Console.WriteLine("Writed to database!");
                 }
                 else
                     throw new Exception("Таблица не найдена.");
@@ -39,7 +43,7 @@ namespace TG_Bot_MVC
             {
                 Console.WriteLine($"Произошла ошибка: {ex.Message}");
                 Thread.Sleep(1800000);
-                MainParse(url);
+                Main([]);
             }
         }
 
@@ -48,7 +52,7 @@ namespace TG_Bot_MVC
             var divElements = doc.DocumentNode.SelectNodes("//div");
 
             // Look for the text in parentheses using a regular expression
-            Regex regex = new Regex(@"\((.*?)\)");
+            Regex regex = new(@"\((.*?)\)");
             Match match = regex.Match(divElements[3].InnerText);
 
             if (match.Success)
@@ -142,13 +146,13 @@ namespace TG_Bot_MVC
             var json = new List<string>();
             foreach (var item in rowDataDict)
             {
-                json.Add(Serializer.SerializeJson(item.Value));
+                json.Add(JsonConvert.SerializeObject(item.Value, Newtonsoft.Json.Formatting.Indented));
             }
             return json.ToArray();
         }
         private static void WriteToDatabase(Dictionary<string, Dictionary<int, string>> groupData, string[] json, string weekOfSchedule)
         {
-            
+
             var context = new LibraryContext();
             var localAPI = new LocalAPI(context);
 
@@ -158,13 +162,13 @@ namespace TG_Bot_MVC
             foreach (var item in groupData.Keys)
             {
                 Console.WriteLine($"{item} - {json[i]}");
-                localAPI.AddReplasementLesson(
-                    localAPI.TryGetGroupId(item),
-                    localAPI.GetWeekOfScheduleId(weekOfSchedule),
-                    json[i],
-                    today
-                );
-                i++;
+                //localAPI.AddReplasementLesson(
+                //    localAPI.TryGetGroupId(item),
+                //    localAPI.GetWeekOfScheduleId(weekOfSchedule),
+                //    json[i],
+                //    today
+                //);
+                //i++;
             }
         }
     }
