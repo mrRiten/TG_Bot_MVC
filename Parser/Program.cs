@@ -37,6 +37,8 @@ namespace TG_Bot_MVC
             catch (Exception ex)
             {
                 Console.WriteLine($"Произошла ошибка: {ex.Message}");
+                Thread.Sleep(1800000);
+                MainParse();
             }
         }
 
