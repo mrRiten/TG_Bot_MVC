@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using Google.Protobuf.WellKnownTypes;
+using HtmlAgilityPack;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 using TG_Bot_MVC;
@@ -11,40 +12,53 @@ namespace Parser
         {
             //"https://menu.sttec.yar.ru/timetable/rasp_first.html";
 
+            HtmlWeb web = new();
+            HtmlDocument doc = web.Load(url);
+
             try
             {
-                var web = new HtmlWeb();
-                HtmlDocument doc = web.Load(url);
+                HtmlNode table = doc.DocumentNode.SelectSingleNode("//table");
 
                 // Get the denominator or numerator from an HTML document
                 string weekOfSchedule = GetWeekOfSchedule(doc);
 
-                HtmlNode table = doc.DocumentNode.SelectSingleNode("//table");
-
                 if (table != null)
                 {
-                    // Parse the replacement table and creating a dictionary of replacement data in the schedule
                     var groupData = ParseScheduleTable(table);
 
                     string[] json = SerializeDictToArrString(groupData);
 
-                    Console.WriteLine("Parsing!");
+                    Logger.LogInfo("Parsing!");
 
                     WriteToDatabase(groupData, json, weekOfSchedule);
-
-                    Console.WriteLine("Write to database");
+;
+                    Logger.LogInfo("Writed to database!");
                 }
                 else
-                    throw new Exception("Таблица не найдена.");
+                    throw new NoTableException("Таблица не найдена.");
+            }
+            catch (NoTableException ex)
+            {
+                Logger.LogWarning($"Произошла исключение в Parser: {ex.Message}");
+            }
+            catch (LessThanThreeCellsException ex)
+            {
+                Logger.LogWarning($"Произошла исключение в Parser: {ex.Message}");
+            }
+            catch (NoBracketsException ex)
+            {
+                Logger.LogWarning($"Произошла исключение в Parser: {ex.Message}");
+            }
+            catch (InvalidFormatException ex)
+            {
+                Logger.LogWarning($"Произошла исключение в Parser: {ex.Message} Значение номера пары: {ex.Value}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Произошла ошибка: {ex.Message}");
-                Thread.Sleep(1800000);
-                Main(args);
+                Logger.LogError($"Произошла неизвестная ошибка в Parser: {ex.Message}");
             }
         }
-
+        //Maybe remove
         private static string GetWeekOfSchedule(HtmlDocument doc)
         {
             var divElements = doc.DocumentNode.SelectNodes("//div");
@@ -59,7 +73,7 @@ namespace Parser
                 return match.Groups[1].Value;
             }
             else
-                throw new Exception("Скобки не найдены");
+                throw new NoBracketsException("Скобки для получения знаменателя или числителя не найдены.");
         }
 
         private static Dictionary<string, Dictionary<int, string>> ParseScheduleTable(HtmlNode table)
@@ -107,7 +121,7 @@ namespace Parser
                     }
                 }
                 else
-                    throw new Exception("Ячеек в таблице меньше 3");
+                    throw new LessThanThreeCellsException("Ячеек в таблице меньше 3.");
             }
             return groupData;
         }
@@ -135,7 +149,8 @@ namespace Parser
             else if (numbersReplacementLessons.Length == 1)
                 list.Add(int.Parse(numbersReplacementLessons));
             else
-                throw new Exception("Неверный формат номера пары в таблице");
+                throw new InvalidFormatException("Неверный формат номера пары в таблице.", numbersReplacementLessons);
+
             return list.ToArray();
         }
 
@@ -150,23 +165,24 @@ namespace Parser
         }
         private static void WriteToDatabase(Dictionary<string, Dictionary<int, string>> groupData, string[] json, string weekOfSchedule)
         {
-            
+
             var context = new LibraryContext();
             var localAPI = new LocalAPI(context);
 
             DateTime today = DateTime.Today;
 
+            Logger.LogDebug($"Замены перед записью в БД: ");
             int i = 0;
             foreach (var item in groupData.Keys)
             {
                 Console.WriteLine($"{item} - {json[i]}");
-                localAPI.AddReplasementLesson(
-                    localAPI.TryGetGroupId(item),
-                    localAPI.GetWeekOfScheduleId(weekOfSchedule),
-                    json[i],
-                    today
-                );
-                i++;
+                //localAPI.AddReplasementLesson(
+                //    localAPI.TryGetGroupId(item),
+                //    localAPI.GetWeekOfScheduleId(weekOfSchedule),
+                //    json[i],
+                //    today
+                //);
+                //i++;
             }
         }
     }
