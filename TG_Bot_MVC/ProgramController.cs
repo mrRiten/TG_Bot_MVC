@@ -27,11 +27,18 @@ namespace TG_Bot_MVC
 
             var chatId = update.Message.Chat.Id;
 
-            // Init ALL IMessageHandler
-            IUpdateHandler testHandler = new TestHandler(null, _localAPI);  // MAIN Handler
-            IUpdateHandler handler = new MainHandler(testHandler, _localAPI);  // for test
+            // Init ALL BaseUpdateHandler
+            BaseUpdateHandler dataHandler = new DateHandler(null, _localAPI);
+            BaseUpdateHandler dataToRequestHandler = new DateToRequestHandler(dataHandler, _localAPI);
+            BaseUpdateHandler handler = new MainHandler(dataToRequestHandler, _localAPI);  // MAIN Handler
 
-            if (handler.Active(update.Message))
+            var userUpdate = new UserUpdate()
+            {
+                UserMessage = message,
+                DateToRequest = DateTime.Today
+            };
+
+            if (handler.Active(userUpdate))
             {
                 if (messageText.StartsWith("/"))
                 {
@@ -39,7 +46,11 @@ namespace TG_Bot_MVC
                 }
                 else
                 {
-                    await _botVeiw.SendDefaultResponse(chatId, messageText, cancellationToken);
+                    var response = _localAPI.GetCorrectSchedule(
+                        _localAPI.GetFullUser(message.Chat.Id).Setting.GroupId, 
+                        (int)userUpdate.DateToRequest.DayOfWeek)
+                        .SerializeDataLessons;
+                    await _botVeiw.SendDefaultResponse(chatId, response, cancellationToken);
                 }
             }
         }

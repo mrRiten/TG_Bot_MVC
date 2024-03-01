@@ -8,63 +8,69 @@ using Telegram.Bot.Types;
 
 namespace TG_Bot_MVC
 {
-    public abstract class IUpdateHandler
+    public abstract class BaseUpdateHandler(LocalAPI localAPI)
     {
-        public IUpdateHandler(LocalAPI localAPI)
+        public readonly LocalAPI localAPI = localAPI;
+        public readonly BaseUpdateHandler? nextHandler;
+
+        public abstract bool Active(UserUpdate userUpdate);
+
+        public bool? CallNextHandler(UserUpdate userUpdate)
         {
-            this.localAPI = localAPI;
-        }
-
-        public readonly LocalAPI localAPI;
-        public readonly IUpdateHandler? nextHandler;
-
-        public abstract bool Active(Message userMessage);
-
-        public bool? CallNextHandler(Message userMessage)
-        {
-            return Active(userMessage);
+            return Active(userUpdate);
         }
     }
 
-    public class MainHandler : IUpdateHandler
+    public class MainHandler(BaseUpdateHandler? nextHandler, LocalAPI localAPI) : BaseUpdateHandler(localAPI)
     {
-        public MainHandler(IUpdateHandler? nextHandler, LocalAPI localAPI) : base(localAPI)
-        {
-            this.nextHandler = nextHandler;
-        }
+        public new readonly BaseUpdateHandler? nextHandler = nextHandler;
 
-        public new readonly IUpdateHandler? nextHandler;
-
-        public override bool Active(Message userMessage)
+        public override bool Active(UserUpdate userUpdate)
         {
-            var user = localAPI.TryGetUser(userMessage.Chat.Id, userMessage.Chat.FirstName);
+            var user = localAPI.TryGetUser(userUpdate.UserMessage.Chat.Id, userUpdate.UserMessage.Chat.FirstName);
 
             if (user.StatusId == 1)
             {
-                return nextHandler?.CallNextHandler(userMessage) ?? true;
+                return nextHandler?.CallNextHandler(userUpdate) ?? true;
             }
             return false;
         }
     }
 
-    public class TestHandler : IUpdateHandler
+    public class DateToRequestHandler(BaseUpdateHandler? nextHandler, LocalAPI localAPI) : BaseUpdateHandler(localAPI)
     {
-        public TestHandler(IUpdateHandler? nextHandler, LocalAPI localAPI) : base(localAPI)
+        public new readonly BaseUpdateHandler? nextHandler = nextHandler;
+
+        public override bool Active(UserUpdate userUpdate)
         {
-            this.nextHandler = nextHandler;
-        }
-
-        public new readonly IUpdateHandler? nextHandler;
-
-        public override bool Active(Message userMessage)
-        {
-            var user = localAPI.GetFullInfoUser(userMessage.Chat.Id);
-
-            if (user.Setting.Group.GroupName == "ИС1-21")
+            if (userUpdate.UserMessage.Text == "⬅️ Предыдущее")
             {
-                return nextHandler?.CallNextHandler(userMessage) ?? true;
+                userUpdate.DateToRequest = userUpdate.DateToRequest.AddDays(-1);
             }
-            return false;
+            else if (userUpdate.UserMessage.Text == "Следующее ➡️")
+            {
+                userUpdate.DateToRequest = userUpdate.DateToRequest.AddDays(1);
+            }
+            return nextHandler?.CallNextHandler(userUpdate) ?? true;
+        }
+    }
+
+
+    public class DateHandler(BaseUpdateHandler? nextHandler, LocalAPI localAPI) : BaseUpdateHandler(localAPI)
+    {
+        public new readonly BaseUpdateHandler? nextHandler = nextHandler;
+
+        public override bool Active(UserUpdate userUpdate)
+        {
+            if (userUpdate.DateToRequest.DayOfWeek == DayOfWeek.Sunday && userUpdate.UserMessage.Text == "Следующее ➡️")
+            {
+                userUpdate.DateToRequest = userUpdate.DateToRequest.AddDays(1);
+            }
+            else if (userUpdate.DateToRequest.DayOfWeek == DayOfWeek.Sunday && userUpdate.UserMessage.Text == "Следующее ➡️")
+            {
+                userUpdate.DateToRequest = userUpdate.DateToRequest.AddDays(-1);
+            }
+            return nextHandler?.CallNextHandler(userUpdate) ?? true;
         }
     }
 

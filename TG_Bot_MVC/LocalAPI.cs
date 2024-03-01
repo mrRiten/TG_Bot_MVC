@@ -153,12 +153,12 @@ namespace TG_Bot_MVC
             }
         }
 
-        public User? GetFullUser(int IdUser)
+        public User? GetFullUser(long userTgId)
         {
             return _context.Users
                 .Include(u => u.Status)
                 .Include(u => u.Setting)
-                .FirstOrDefault(u => u.IdUser == IdUser);
+                .FirstOrDefault(u => u.UserTGId == userTgId);
         }
 
         public User? GetFullInfoUser(long userTgId)
