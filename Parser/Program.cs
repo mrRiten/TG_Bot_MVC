@@ -1,6 +1,6 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 using Newtonsoft.Json;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using TG_Bot_MVC;
 
@@ -31,7 +31,7 @@ namespace Parser
                     Logger.LogInfo("Parsing!");
 
                     WriteToDatabase(groupData, json, weekOfSchedule);
-;
+
                     Logger.LogInfo("Writed to database!");
                 }
                 else
@@ -39,19 +39,19 @@ namespace Parser
             }
             catch (NoTableException ex)
             {
-                Logger.LogWarning($"Произошла исключение в Parser: {ex.Message}");
+                Logger.LogWarning($"Произошло исключение в Parser: {ex.Message}");
             }
             catch (LessThanThreeCellsException ex)
             {
-                Logger.LogWarning($"Произошла исключение в Parser: {ex.Message}");
+                Logger.LogWarning($"Произошло исключение в Parser: {ex.Message}");
             }
             catch (NoBracketsException ex)
             {
-                Logger.LogWarning($"Произошла исключение в Parser: {ex.Message}");
+                Logger.LogWarning($"Произошло исключение в Parser: {ex.Message}");
             }
             catch (InvalidFormatException ex)
             {
-                Logger.LogWarning($"Произошла исключение в Parser: {ex.Message} Значение номера пары: {ex.Value}");
+                Logger.LogWarning($"Произошло исключение в Parser: {ex.Message} Значение номера пары: {ex.CurrentValue}");
             }
             catch (Exception ex)
             {
@@ -128,14 +128,14 @@ namespace Parser
 
         private static int[] ValidateNumbersReplacementLessons(string numbersReplacementLessons)
         {
-            var list = new List<int>();
+            var ValidNumsList = new List<int>();
 
             if (numbersReplacementLessons.Contains(','))
             {
                 string[] temp = numbersReplacementLessons.Split(',');
                 for (int i = 0; i < temp.Length; i++)
                 {
-                    list.Add(int.Parse(temp[i]));
+                    ValidNumsList.Add(int.Parse(temp[i]));
                 }
             }
             else if (numbersReplacementLessons.Contains('-'))
@@ -143,15 +143,33 @@ namespace Parser
                 string[] temp = numbersReplacementLessons.Split('-');
                 for (int i = int.Parse(temp[0]); i <= int.Parse(temp[temp.Length - 1]); i++)
                 {
-                    list.Add(i);
+                    ValidNumsList.Add(i);
                 }
             }
+            else if (numbersReplacementLessons.Contains('.'))
+            {
+                double temp = double.Parse(numbersReplacementLessons, CultureInfo.InvariantCulture);
+                if (temp <= 9.10)
+                    ValidNumsList.Add(0);
+                else if (temp <= 10.50)
+                    ValidNumsList.Add(1);
+                else if (temp <= 12.30)
+                    ValidNumsList.Add(2);
+                else if (temp <= 14.50)
+                    ValidNumsList.Add(3);
+                else if (temp <= 16.35)
+                    ValidNumsList.Add(4);
+                else if (temp <= 18.35)
+                    ValidNumsList.Add(5);
+                else
+                    ValidNumsList.Add(6);
+            }
             else if (numbersReplacementLessons.Length == 1)
-                list.Add(int.Parse(numbersReplacementLessons));
+                ValidNumsList.Add(int.Parse(numbersReplacementLessons));
             else
                 throw new InvalidFormatException("Неверный формат номера пары в таблице.", numbersReplacementLessons);
 
-            return list.ToArray();
+            return ValidNumsList.ToArray();
         }
 
         private static string[] SerializeDictToArrString(Dictionary<string, Dictionary<int, string>> rowDataDict)
@@ -159,7 +177,7 @@ namespace Parser
             var json = new List<string>();
             foreach (var item in rowDataDict)
             {
-                json.Add(Serializer.SerializeJson(item.Value));
+                json.Add(JsonConvert.SerializeObject(item.Value, Formatting.Indented));
             }
             return json.ToArray();
         }
@@ -186,4 +204,8 @@ namespace Parser
             }
         }
     }
+    class NoTableException(string message) : Exception(message) { }
+    class NoBracketsException(string message) : Exception(message) { }
+    class LessThanThreeCellsException(string message) : Exception(message) { }
+    class InvalidFormatException(string message, string currentValue) : ArgumentException(message) { public string CurrentValue { get; } = currentValue; }
 }
