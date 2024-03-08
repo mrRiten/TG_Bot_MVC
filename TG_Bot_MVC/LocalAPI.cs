@@ -30,12 +30,23 @@ namespace TG_Bot_MVC
             _context.SaveChanges(); 
         }
 
+        public void SetBan(long userTgId, bool banned)
+        {
+            var user = _context.Users.Where(u => u.UserTGId == userTgId).FirstOrDefault();
+
+            user.IsBanned = banned;
+
+            _context.Users.Update(user);
+            _context.SaveChanges();
+        }
+
         public void AddUser(string userName, long userTGId)
         {
             var user = new User
             {
                 UserName = userName,
                 UserTGId = userTGId,
+                IsBanned = false
             };
 
             _context.Users.Add(user);

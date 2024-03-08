@@ -23,8 +23,8 @@ namespace TG_Bot_MVC
         {
             new[]
             {
-                InlineKeyboardButton.WithCallbackData(text: "Group", callbackData: "Group"),
-                InlineKeyboardButton.WithCallbackData(text: "Departmetn", callbackData: "Departmetn"),
+                InlineKeyboardButton.WithCallbackData(text: "Student", callbackData: "QStudent"),
+                InlineKeyboardButton.WithCallbackData(text: "Teacher", callbackData: "QTeacher"),
             }
         });
 
@@ -46,7 +46,7 @@ namespace TG_Bot_MVC
 
             Message message = await _bot.SendTextMessageAsync(
                 chatId: IdChat,
-                text: "Command!",
+                text: response,
                 replyMarkup: inlineKeyboardSetting,
                 parseMode: ParseMode.Markdown,
                 cancellationToken: cancellationToken);

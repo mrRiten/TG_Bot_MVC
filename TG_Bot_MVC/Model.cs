@@ -1,16 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TG_Bot_MVC
 {
-    public class LibraryContext : DbContext
+    public class LibraryContext(bool isDebug) : DbContext
     {
+        public readonly bool isDebug = isDebug;
+
         public DbSet<User> Users { get; set; }
         public DbSet<Status> Statuses { get; set; }
         public DbSet<Group> Groups { get; set; }
@@ -24,7 +20,16 @@ namespace TG_Bot_MVC
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             ConfigWorker configWorker = new();
-            optionsBuilder.UseMySQL(configWorker.GetConnectionString());
+            if (isDebug)
+            {
+                optionsBuilder.UseMySQL(configWorker.GetDebugConnectionString());
+            }
+            else
+            {
+                optionsBuilder.UseMySQL(configWorker.GetReleaseConnectionString());
+            }
+
+            optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -95,16 +100,16 @@ namespace TG_Bot_MVC
     public class DefaultSchedule
     {
         [Key]
-        public int IdDefSchedule {  get; set; }
+        public int IdDefSchedule { get; set; }
 
-        public int GroupId {  get; set; }
+        public int GroupId { get; set; }
         public Group Group { get; set; }
-        
-        public int WeekOfScheduleId {  get; set; }
-        public WeekOfSchedule WeekOfSchedule {  get; set; }
 
-        public int Weekday {  get; set; }
-        public string SerializeDataLessons {  get; set; }
+        public int WeekOfScheduleId { get; set; }
+        public WeekOfSchedule WeekOfSchedule { get; set; }
+
+        public int Weekday { get; set; }
+        public string SerializeDataLessons { get; set; }
     }
 
     public class ReplasementLesson
@@ -141,7 +146,7 @@ namespace TG_Bot_MVC
     {
         [Key]
         public int IdWeekOfSchedule { get; set; }
-        public string WeekOfScheduleName {  get; set; }
+        public string WeekOfScheduleName { get; set; }
 
         public List<DefaultSchedule> DefaultSchedules { get; set; }
         public List<ReplasementLesson> ReplasementLessons { get; set; }
@@ -160,6 +165,8 @@ namespace TG_Bot_MVC
         public Status Status { get; set; }
 
         public Setting Setting { get; set; }
+
+        public bool IsBanned { get; set; }
 
     }
 
@@ -182,7 +189,7 @@ namespace TG_Bot_MVC
     {
         [Key]
         public int IdDepartment { get; set; }
-        public string DepartmentName {  get; set; }
+        public string DepartmentName { get; set; }
 
         public List<Group> Groups { get; set; }
     }
@@ -194,10 +201,10 @@ namespace TG_Bot_MVC
         public bool isMailing { get; set; }
         public bool TimeOfLessons { get; set; }
 
-        public int UserId {  set; get; }
+        public int UserId { set; get; }
         public User User { set; get; }
 
-        public int GroupId {  get; set; }
+        public int GroupId { get; set; }
         public Group Group { get; set; }
     }
 

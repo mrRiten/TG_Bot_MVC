@@ -3,8 +3,17 @@ using Telegram.Bot.Polling;
 using Telegram.Bot.Types.Enums;
 using TG_Bot_MVC;
 
+bool isDubug = true;
+if (args.Length > 0)
+{
+    if (args[0] == "1")
+    {
+        isDubug = false;
+    }
+}
+
 var veiw = new BotVeiw();
-var controller = new ProgramController(veiw);
+var controller = new ProgramController(veiw, isDubug);
 
 await RunBot(controller);
 

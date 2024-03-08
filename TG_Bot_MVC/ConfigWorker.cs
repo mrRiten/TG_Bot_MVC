@@ -13,10 +13,17 @@ namespace TG_Bot_MVC
             return josnData;
         }
 
-        public string GetConnectionString()
+        public string GetDebugConnectionString()
         {
             var data = GetJsonData();
-            var connectionString = (string)data["ConnectionString"] ?? " ";
+            var connectionString = (string)data["DebugConnectionString"] ?? " ";
+            return connectionString;
+        }
+
+        public string GetReleaseConnectionString()
+        {
+            var data = GetJsonData();
+            var connectionString = (string)data["ReleaseConnectionString"] ?? " ";
             return connectionString;
         }
 
@@ -40,6 +47,13 @@ namespace TG_Bot_MVC
             var adminsJson = (JArray)data["Admins"];
             string[] admins = adminsJson.ToObject<string[]>();
             return admins;
+        }
+
+        public string GetHelloMessage()
+        {
+            var data = GetJsonData();
+            var helloMessage = (string)data["HelloMessage"] ?? " ";
+            return helloMessage;
         }
 
     }
