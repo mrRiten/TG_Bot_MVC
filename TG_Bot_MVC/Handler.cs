@@ -1,12 +1,4 @@
-﻿using HtmlAgilityPack;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Telegram.Bot.Types;
-
-namespace TG_Bot_MVC
+﻿namespace TG_Bot_MVC
 {
     public abstract class BaseUpdateHandler(LocalAPI localAPI)
     {

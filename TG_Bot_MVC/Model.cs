@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TG_Bot_MVC
 {
-    public class LibraryContext(bool isDebug) : DbContext
+    public class LibraryContext(bool isDebug = true) : DbContext
     {
         public readonly bool isDebug = isDebug;
 

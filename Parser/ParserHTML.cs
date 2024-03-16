@@ -1,6 +1,7 @@
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json;
 using System.Globalization;
+using System.Security.Policy;
 using System.Text.RegularExpressions;
 using TG_Bot_MVC;
 
@@ -8,21 +9,18 @@ namespace Parser
 {
     internal class ParserHTML
     {
-        public static void MainParse(string url)
+        private readonly HtmlWeb web = new();
+        public HtmlDocument document;
+        public void MainParse(string url)
         {
-            //https://menu.sttec.yar.ru/timetable/rasp_first.html
-            //https://menu.sttec.yar.ru/timetable/rasp_second.html
-            //const string url = "https://menu.sttec.yar.ru/timetable/rasp_first.html";
-
-            HtmlWeb web = new();
-            HtmlDocument doc = web.Load(url);
+            document = web.Load(url);
 
             try
             {
-                HtmlNode table = doc.DocumentNode.SelectSingleNode("//table");
+                HtmlNode table = document.DocumentNode.SelectSingleNode("//table");
 
                 // Get the denominator or numerator from an HTML document
-                string weekOfSchedule = GetWeekOfSchedule(doc);
+                string weekOfSchedule = GetWeekOfSchedule(document);
 
                 if (table != null)
                 {
@@ -60,8 +58,7 @@ namespace Parser
                 Logger.LogError($"Произошла неизвестная ошибка в Parser: {ex.Message}");
             }
         }
-        //Maybe remove
-        private static string GetWeekOfSchedule(HtmlDocument doc)
+        public static string GetWeekOfSchedule(HtmlDocument doc)
         {
             var divElements = doc.DocumentNode.SelectNodes("//div");
 
@@ -77,7 +74,6 @@ namespace Parser
             else
                 throw new NoBracketsException("Скобки для получения знаменателя или числителя не найдены.");
         }
-
         private static Dictionary<string, Dictionary<int, string>> ParseScheduleTable(HtmlNode table)
         {
             // Create a dictionary where the key is the name of the group, and the value is a dictionary of pairs of replacement numbers and corresponding replacement data
@@ -127,7 +123,6 @@ namespace Parser
             }
             return groupData;
         }
-
         private static int[] ValidateNumbersReplacementLessons(string numbersReplacementLessons)
         {
             var ValidNumsList = new List<int>();
@@ -173,7 +168,6 @@ namespace Parser
 
             return ValidNumsList.ToArray();
         }
-
         private static string[] SerializeDictToArrString(Dictionary<string, Dictionary<int, string>> rowDataDict)
         {
             var json = new List<string>();
@@ -185,23 +179,20 @@ namespace Parser
         }
         private static void WriteToDatabase(Dictionary<string, Dictionary<int, string>> groupData, string[] json, string weekOfSchedule)
         {
-            //?
-            LibraryContext context = new();
-            var localAPI = new LocalAPI(context);
-
-            DateTime today = DateTime.Today;
+            var localAPI = new LocalAPI(new LibraryContext());
 
             Logger.LogDebug($"Замены перед записью в БД: ");
             int i = 0;
             foreach (var item in groupData.Keys)
             {
                 Logger.LogDebug($"{item} - {json[i]}");
-                //localAPI.AddReplasementLesson(
-                //    localAPI.TryGetGroupId(item),
-                //    localAPI.GetWeekOfScheduleId(weekOfSchedule),
-                //    json[i],
-                //    today
-                //);
+                localAPI.DelReplasementLessons(DateTime.Today);
+                localAPI.AddReplasementLesson(
+                    localAPI.TryGetGroupId(item),
+                    localAPI.GetWeekOfScheduleId(weekOfSchedule),
+                    json[i],
+                    DateTime.Today
+                );
                 i++;
             }
         }
