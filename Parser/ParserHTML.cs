@@ -7,10 +7,34 @@ using TG_Bot_MVC;
 
 namespace Parser
 {
-    internal class ParserHTML
+    internal class ParserHTML : ISubject
     {
-        private readonly HtmlWeb web = new();
-        public HtmlDocument document;
+        private List<IObserver> ObserverList;
+
+        public ParserHTML(IObserver observer)
+        {
+            ObserverList = new List<IObserver>();
+            AddObserver(observer);
+        }
+
+        public void Notify()
+        {
+            foreach (var observer in ObserverList)
+            {
+                observer.Update();
+            }
+        }
+
+        public void AddObserver(IObserver observer)
+        {
+            ObserverList.Add(observer);
+        }
+
+        public void RemoveObserver(IObserver observer)
+        {
+            ObserverList.Remove(observer);
+        }
+
         public void MainParse(string url)
         {
             document = web.Load(url);
@@ -57,6 +81,8 @@ namespace Parser
             {
                 Logger.LogError($"Произошла неизвестная ошибка в Parser: {ex.Message}");
             }
+
+            Notify();
         }
         public static string GetWeekOfSchedule(HtmlDocument doc)
         {
@@ -179,7 +205,11 @@ namespace Parser
         }
         private static void WriteToDatabase(Dictionary<string, Dictionary<int, string>> groupData, string[] json, string weekOfSchedule)
         {
-            var localAPI = new LocalAPI(new LibraryContext());
+            //?
+            LibraryContext context = new(true); // Debug mode = true! TODO: add handling debug mode with Main args
+            var localAPI = new LocalAPI(context);
+
+            DateTime today = DateTime.Today;
 
             Logger.LogDebug($"Замены перед записью в БД: ");
             int i = 0;
