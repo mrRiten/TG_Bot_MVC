@@ -37,6 +37,30 @@ namespace Parser
 
         public void MainParse(string url)
         {
+            ObserverList = new List<IObserver>();
+            AddObserver(observer);
+        }
+
+        public void Notify()
+        {
+            foreach (var observer in ObserverList)
+            {
+                observer.Update();
+            }
+        }
+
+        public void AddObserver(IObserver observer)
+        {
+            ObserverList.Add(observer);
+        }
+
+        public void RemoveObserver(IObserver observer)
+        {
+            ObserverList.Remove(observer);
+        }
+
+        public void MainParse(string url)
+        {
             document = web.Load(url);
 
             try
@@ -216,12 +240,11 @@ namespace Parser
             foreach (var item in groupData.Keys)
             {
                 Logger.LogDebug($"{item} - {json[i]}");
-                localAPI.DelReplasementLessons(DateTime.Today);
                 localAPI.AddReplasementLesson(
                     localAPI.TryGetGroupId(item),
                     localAPI.GetWeekOfScheduleId(weekOfSchedule),
                     json[i],
-                    DateTime.Today
+                    today
                 );
                 i++;
             }
