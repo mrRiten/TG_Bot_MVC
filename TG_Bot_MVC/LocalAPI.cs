@@ -104,23 +104,23 @@ namespace TG_Bot_MVC
                 .FirstOrDefault(r => r.GroupId == groupId && r.Weekday == weekday);
         }
 
-        public void AddReplasementLesson(int groupId, int weekOfScheduleId, string serializeDataLesson, DateTime dateTime)
+        public void AddReplasementLesson(int groupId, int weekOfScheduleId, string serializeDataLesson, int weekDay)
         {
             var replasementLesson = new ReplasementLesson
             {
                 GroupId = groupId,
                 WeekOfScheduleId = weekOfScheduleId,
                 SerializeDataLessons = serializeDataLesson,
-                Weekday = (int)dateTime.DayOfWeek
+                Weekday = weekDay
             };
 
             _context.ReplasementLessons.Add(replasementLesson);
             _context.SaveChanges();
         }
 
-        public void DelReplasementLessons(DateTime dateTime)
+        public void DelReplasementLessons(int weekDay)
         {
-            var schedule = _context.ReplasementLessons.Where(rl => rl.Weekday == (int)dateTime.DayOfWeek);
+            var schedule = _context.ReplasementLessons.Where(rl => rl.Weekday == weekDay);
 
             if (schedule.Any())
             {
@@ -139,13 +139,13 @@ namespace TG_Bot_MVC
             return _context.CorrectSchedules.FirstOrDefault(cs => cs.GroupId == IdGroup && cs.Weekday == weekday);
         }
 
-        public void SetCorrectSchedule(int IdGoup, int weekOfScheduleId, string serializeDataLesson, DateTime dateTime)
+        public void AddCorrectSchedule(int IdGoup, int weekOfScheduleId, string serializeDataLesson, int weekDay)
         {
             var correctSchedule = new CorrectSchedule
             {
                 GroupId = IdGoup,
                 WeekOfScheduleId = weekOfScheduleId,
-                Weekday = (int)dateTime.DayOfWeek,
+                Weekday = weekDay,
                 SerializeDataLessons = serializeDataLesson
             };
 
@@ -153,9 +153,9 @@ namespace TG_Bot_MVC
             _context.SaveChanges();
         }
 
-        public void DelCorrectSchedules(DateTime dateTime)
+        public void DelCorrectSchedules(int weekDay)
         {
-            var schedules = _context.CorrectSchedules.Where(cs => cs.Weekday == (int)dateTime.DayOfWeek);
+            var schedules = _context.CorrectSchedules.Where(cs => cs.Weekday == weekDay);
 
             if (schedules.Any())
             {

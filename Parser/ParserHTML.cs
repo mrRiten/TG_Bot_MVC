@@ -6,9 +6,35 @@ using TG_Bot_MVC;
 
 namespace Parser
 {
-    internal class ParserHTML
+    internal class ParserHTML : ISubject
     {
-        public static void MainParse(string url)
+        private List<IObserver> ObserverList;
+
+        public ParserHTML(IObserver observer)
+        {
+            ObserverList = new List<IObserver>();
+            AddObserver(observer);
+        }
+
+        public void Notify()
+        {
+            foreach (var observer in ObserverList)
+            {
+                observer.Update();
+            }
+        }
+
+        public void AddObserver(IObserver observer)
+        {
+            ObserverList.Add(observer);
+        }
+
+        public void RemoveObserver(IObserver observer)
+        {
+            ObserverList.Remove(observer);
+        }
+
+        public void MainParse(string url)
         {
             //https://menu.sttec.yar.ru/timetable/rasp_first.html
             //https://menu.sttec.yar.ru/timetable/rasp_second.html
@@ -59,6 +85,8 @@ namespace Parser
             {
                 Logger.LogError($"Произошла неизвестная ошибка в Parser: {ex.Message}");
             }
+
+            Notify();
         }
         //Maybe remove
         private static string GetWeekOfSchedule(HtmlDocument doc)
@@ -186,7 +214,7 @@ namespace Parser
         private static void WriteToDatabase(Dictionary<string, Dictionary<int, string>> groupData, string[] json, string weekOfSchedule)
         {
             //?
-            LibraryContext context = new();
+            LibraryContext context = new(true); // Debug mode = true! TODO: add handling debug mode with Main args
             var localAPI = new LocalAPI(context);
 
             DateTime today = DateTime.Today;
@@ -196,12 +224,12 @@ namespace Parser
             foreach (var item in groupData.Keys)
             {
                 Logger.LogDebug($"{item} - {json[i]}");
-                //localAPI.AddReplasementLesson(
-                //    localAPI.TryGetGroupId(item),
-                //    localAPI.GetWeekOfScheduleId(weekOfSchedule),
-                //    json[i],
-                //    today
-                //);
+                localAPI.AddReplasementLesson(
+                    localAPI.TryGetGroupId(item),
+                    localAPI.GetWeekOfScheduleId(weekOfSchedule),
+                    json[i],
+                    today
+                );
                 i++;
             }
         }

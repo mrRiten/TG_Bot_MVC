@@ -1,8 +1,4 @@
-﻿using HtmlAgilityPack;
-using Newtonsoft.Json;
-using System.Globalization;
-using System.Text.RegularExpressions;
-using TG_Bot_MVC;
+﻿using TG_Bot_MVC;
 
 namespace Parser
 {
@@ -10,8 +6,20 @@ namespace Parser
     {
         static void Main(string[] args)
         {
-            ParserHTML.MainParse("https://menu.sttec.yar.ru/timetable/rasp_first.html");
-            ParserHTML.MainParse("https://menu.sttec.yar.ru/timetable/rasp_second.html");
+            while (true)
+            {
+                MainUpdate("https://menu.sttec.yar.ru/timetable/rasp_first.html");
+                MainUpdate("https://menu.sttec.yar.ru/timetable/rasp_second.html");
+
+                Thread.Sleep(TimeSpan.FromMinutes(20));
+            }
+        }
+
+        static void MainUpdate(string pathToParse)
+        {
+            var observer = new ParserObserverCreator();
+            var parser = new ParserHTML(observer);
+            parser.MainParse(pathToParse);
         }
     }
 }

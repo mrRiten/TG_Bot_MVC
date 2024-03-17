@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "TG_Bot_MVC": {
+      "commandName": "Project"
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    }
+  }
+}
