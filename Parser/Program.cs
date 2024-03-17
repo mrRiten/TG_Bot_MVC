@@ -8,18 +8,23 @@ namespace Parser
         {
             while (true)
             {
-                MainUpdate("https://menu.sttec.yar.ru/timetable/rasp_first.html");
-                MainUpdate("https://menu.sttec.yar.ru/timetable/rasp_second.html");
+                MainUpdate(["https://menu.sttec.yar.ru/timetable/rasp_first.html", "https://menu.sttec.yar.ru/timetable/rasp_second.html"]);
 
                 Thread.Sleep(TimeSpan.FromMinutes(20));
             }
         }
 
-        static void MainUpdate(string pathToParse)
+        static void MainUpdate(string[] pathToParse)
         {
             var observer = new ParserObserverCreator();
             var parser = new ParserHTML(observer);
+            //var builder = new ScheduleBuilder();
             parser.MainParse(pathToParse);
+            //builder.MainBuild();
+
+            //var api = new LocalAPI(new LibraryContext());
+            //api.DelReplasementLessons(6);
+            //api.DelCorrectSchedules(6);
         }
     }
 }

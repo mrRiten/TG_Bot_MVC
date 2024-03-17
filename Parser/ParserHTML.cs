@@ -9,8 +9,10 @@ namespace Parser
 {
     internal class ParserHTML : ISubject
     {
-        private List<IObserver> ObserverList;
+        public static string WeekOfSchedule;
 
+        private List<IObserver> ObserverList;
+        
         public ParserHTML(IObserver observer)
         {
             ObserverList = new List<IObserver>();
@@ -35,26 +37,29 @@ namespace Parser
             ObserverList.Remove(observer);
         }
 
-        public void MainParse(string url)
+        public void MainParse(string[] url)
         {
-            document = web.Load(url);
+            HtmlWeb web = new();
+            HtmlDocument document1 = web.Load(url[0]);
+            HtmlDocument document2 = web.Load(url[1]);
 
             try
             {
-                HtmlNode table = document.DocumentNode.SelectSingleNode("//table");
+                HtmlNode table1 = document1.DocumentNode.SelectSingleNode("//table");
+                HtmlNode table2 = document2.DocumentNode.SelectSingleNode("//table");
 
                 // Get the denominator or numerator from an HTML document
-                string weekOfSchedule = GetWeekOfSchedule(document);
+                WeekOfSchedule = GetWeekOfSchedule(document1);
 
-                if (table != null)
+                if (table1 != null)
                 {
-                    var groupData = ParseScheduleTable(table);
+                    List<Dictionary<string, Dictionary<int, string>>> groupDataList = [ParseScheduleTable(table1), ParseScheduleTable(table2)];
 
-                    string[] json = SerializeDictToArrString(groupData);
+                    string[] json = SerializeDictToArrString(groupDataList);
 
                     Logger.LogInfo("Parsing!");
 
-                    WriteToDatabase(groupData, json, weekOfSchedule);
+                    WriteToDatabase(groupDataList, json, WeekOfSchedule);
 
                     Logger.LogInfo("Writed to database!");
                 }
@@ -194,37 +199,42 @@ namespace Parser
 
             return ValidNumsList.ToArray();
         }
-        private static string[] SerializeDictToArrString(Dictionary<string, Dictionary<int, string>> rowDataDict)
+        private static string[] SerializeDictToArrString(List<Dictionary<string, Dictionary<int, string>>> listDataDict)
         {
             var json = new List<string>();
-            foreach (var item in rowDataDict)
+            foreach (var dataDict in listDataDict)
             {
-                json.Add(JsonConvert.SerializeObject(item.Value, Formatting.Indented));
+                foreach (var item in dataDict)
+                {
+                    json.Add(JsonConvert.SerializeObject(item.Value, Formatting.Indented));
+                }
             }
             return json.ToArray();
         }
-        private static void WriteToDatabase(Dictionary<string, Dictionary<int, string>> groupData, string[] json, string weekOfSchedule)
+        private static void WriteToDatabase(List<Dictionary<string, Dictionary<int, string>>> groupDataList, string[] json, string weekOfSchedule)
         {
             //?
             LibraryContext context = new(true); // Debug mode = true! TODO: add handling debug mode with Main args
             var localAPI = new LocalAPI(context);
 
-            DateTime today = DateTime.Today;
-
+            localAPI.DelReplasementLessons((int)DateTime.Today.DayOfWeek);
             Logger.LogDebug($"Замены перед записью в БД: ");
             int i = 0;
-            foreach (var item in groupData.Keys)
+            foreach (var groupData in groupDataList)
             {
-                Logger.LogDebug($"{item} - {json[i]}");
-                localAPI.DelReplasementLessons(DateTime.Today);
-                localAPI.AddReplasementLesson(
-                    localAPI.TryGetGroupId(item),
-                    localAPI.GetWeekOfScheduleId(weekOfSchedule),
-                    json[i],
-                    DateTime.Today
-                );
-                i++;
+                foreach (var group in groupData.Keys)
+                {
+                    Logger.LogDebug($"{group} - {json[i]}");
+                    localAPI.AddReplasementLesson(
+                        localAPI.TryGetGroupId(group),
+                        localAPI.GetWeekOfScheduleId(weekOfSchedule),
+                        json[i],
+                        (int)DateTime.Today.DayOfWeek
+                    );
+                    i++;
+                }
             }
+            
         }
     }
     class NoTableException(string message) : Exception(message) { }

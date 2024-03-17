@@ -12,9 +12,8 @@ namespace Parser
             _localAPI = new LocalAPI(new LibraryContext());
         }
 
-        public void MainBuild(HtmlDocument parser)
+        public void MainBuild()
         {
-            string weekOfSchedule = ParserHTML.GetWeekOfSchedule(parser);
 
             for (int idGroup = 1; idGroup < 86; idGroup++)
             {
@@ -22,14 +21,12 @@ namespace Parser
                 //DefaultSchedule? defaultLesson = _localAPI.GetDefaultSchedule(i, (int)DateTime.Today.DayOfWeek);
                 ReplasementLesson? replasementLesson = _localAPI.GetReplasementLesson(idGroup, (int)DateTime.Today.DayOfWeek);
 
-
                 Dictionary<int, string> defaultData = JsonConvert.DeserializeObject<Dictionary<int, string>>(defaultLesson);
                 Dictionary<int, string> replaceData = null;
                 if (replasementLesson != null)
                 {
                     replaceData = JsonConvert.DeserializeObject<Dictionary<int, string>>(replasementLesson.SerializeDataLessons);
                 }
-
 
                 if (replaceData != null)
                 { 
@@ -44,18 +41,18 @@ namespace Parser
 
                 string currentData = JsonConvert.SerializeObject(defaultData, Formatting.Indented);
 
-                WriteToDatabase(idGroup, currentData, weekOfSchedule);
+                WriteToDatabase(idGroup, currentData);
             }
         }
-        private void WriteToDatabase(int idGroup, string currentData, string weekOfSchedule)
+        private void WriteToDatabase(int idGroup, string currentData)
         {
             Logger.LogDebug($"\n\n{currentData}");
-            _localAPI.DelCorrectSchedules(DateTime.Today);
-            _localAPI.SetCorrectSchedule(
+            _localAPI.DelCorrectSchedules((int)DateTime.Today.DayOfWeek);
+            _localAPI.AddCorrectSchedule(
                     idGroup,
-                    _localAPI.GetWeekOfScheduleId(weekOfSchedule),
+                    _localAPI.GetWeekOfScheduleId(ParserHTML.WeekOfSchedule),
                     currentData,
-                    DateTime.Today
+                    (int)DateTime.Today.DayOfWeek
             );
         }
     }
