@@ -13,7 +13,7 @@ if (args.Length > 0)
 }
 
 var veiw = new BotVeiw();
-var controller = new ProgramController(veiw, isDubug);
+var controller = new ProgramController(veiw, new LibraryContext(isDubug));
 
 await RunBot(controller);
 
