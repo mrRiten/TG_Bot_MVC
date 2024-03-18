@@ -14,7 +14,6 @@ namespace Parser
 
         public void MainBuild()
         {
-
             for (int idGroup = 1; idGroup < 86; idGroup++)
             {
                 string defaultLesson = "{\r\n  \"0\": \"123\",\r\n  \"1\": \"123\",\r\n  \"2\": \"123\",\r\n  \"3\": \"123\",\r\n  \"4\": \"123\",\r\n  \"5\": \"123\",\r\n  \"6\": \"123\"\r\n}";

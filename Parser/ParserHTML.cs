@@ -1,7 +1,6 @@
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json;
 using System.Globalization;
-using System.Security.Policy;
 using System.Text.RegularExpressions;
 using TG_Bot_MVC;
 
@@ -12,7 +11,7 @@ namespace Parser
         public static string WeekOfSchedule;
 
         private List<IObserver> ObserverList;
-        
+
         public ParserHTML(IObserver observer)
         {
             ObserverList = new List<IObserver>();
@@ -53,13 +52,13 @@ namespace Parser
 
                 if (table1 != null)
                 {
-                    List<Dictionary<string, Dictionary<int, string>>> groupDataList = [ParseScheduleTable(table1), ParseScheduleTable(table2)];
+                    Dictionary<string, Dictionary<int, string>>[] groupDataArr = [ParseScheduleTable(table1), ParseScheduleTable(table2)];
 
-                    string[] json = SerializeDictToArrString(groupDataList);
+                    string[] json = SerializeDictToArrString(groupDataArr);
 
                     Logger.LogInfo("Parsing!");
 
-                    WriteToDatabase(groupDataList, json, WeekOfSchedule);
+                    WriteToDatabase(groupDataArr, json, WeekOfSchedule);
 
                     Logger.LogInfo("Writed to database!");
                 }
@@ -89,7 +88,7 @@ namespace Parser
 
             Notify();
         }
-        public static string GetWeekOfSchedule(HtmlDocument doc)
+        private static string GetWeekOfSchedule(HtmlDocument doc)
         {
             var divElements = doc.DocumentNode.SelectNodes("//div");
 
@@ -199,10 +198,10 @@ namespace Parser
 
             return ValidNumsList.ToArray();
         }
-        private static string[] SerializeDictToArrString(List<Dictionary<string, Dictionary<int, string>>> listDataDict)
+        private static string[] SerializeDictToArrString(Dictionary<string, Dictionary<int, string>>[] groupDataArr)
         {
             var json = new List<string>();
-            foreach (var dataDict in listDataDict)
+            foreach (var dataDict in groupDataArr)
             {
                 foreach (var item in dataDict)
                 {
@@ -211,16 +210,15 @@ namespace Parser
             }
             return json.ToArray();
         }
-        private static void WriteToDatabase(List<Dictionary<string, Dictionary<int, string>>> groupDataList, string[] json, string weekOfSchedule)
+        private static void WriteToDatabase(Dictionary<string, Dictionary<int, string>>[] groupDataArr, string[] json, string weekOfSchedule)
         {
-            //?
             LibraryContext context = new(true); // Debug mode = true! TODO: add handling debug mode with Main args
             var localAPI = new LocalAPI(context);
 
             localAPI.DelReplasementLessons((int)DateTime.Today.DayOfWeek);
             Logger.LogDebug($"Замены перед записью в БД: ");
             int i = 0;
-            foreach (var groupData in groupDataList)
+            foreach (var groupData in groupDataArr)
             {
                 foreach (var group in groupData.Keys)
                 {
@@ -234,7 +232,7 @@ namespace Parser
                     i++;
                 }
             }
-            
+
         }
     }
     class NoTableException(string message) : Exception(message) { }

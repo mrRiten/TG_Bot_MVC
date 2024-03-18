@@ -9,17 +9,16 @@ namespace Parser
             while (true)
             {
                 MainUpdate(["https://menu.sttec.yar.ru/timetable/rasp_first.html", "https://menu.sttec.yar.ru/timetable/rasp_second.html"]);
-
                 Thread.Sleep(TimeSpan.FromMinutes(20));
             }
         }
 
         static void MainUpdate(string[] pathToParse)
         {
-            var observer = new ParserObserverCreator();
-            var parser = new ParserHTML(observer);
+            //var observer = new ParserObserverCreator();
+            //var parser = new ParserHTML(observer);
             //var builder = new ScheduleBuilder();
-            parser.MainParse(pathToParse);
+            //parser.MainParse(pathToParse);
             //builder.MainBuild();
 
             //var api = new LocalAPI(new LibraryContext());

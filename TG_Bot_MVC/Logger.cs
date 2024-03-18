@@ -1,36 +1,58 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TG_Bot_MVC
+﻿namespace TG_Bot_MVC
 {
     public static class Logger
     {
-        private static readonly string pathDebug = "Debug.txt";
+        private static readonly string _logDirectory = "logs";
 
-        private static readonly string pathInfo = "Log.txt";
-
-        private static readonly string pathWarning = "Warning.txt";
-
-        private static readonly string pathError = "Error.txt";
+        static Logger()
+        {
+            if (!Directory.Exists(_logDirectory))
+            {
+                Directory.CreateDirectory(_logDirectory);
+            }
+        }
 
         public static void LogDebug(string message)
         {
-            File.AppendAllText(pathDebug, $"{DateTime.Now} : {message}\n");
+            int maxLinesDebug = 10000;
+            LogMessage("Debug.txt", message, maxLinesDebug);
         }
+
         public static void LogInfo(string message)
         {
-            File.AppendAllText(pathInfo, $"{DateTime.Now} : {message}\n");
+            int maxLinesInfo = 1000;
+            LogMessage("Info.txt", message, maxLinesInfo);
         }
+
         public static void LogWarning(string message)
         {
-            File.AppendAllText(pathWarning, $"{DateTime.Now} : {message}\n");
+            int maxLinesWarning = 500;
+            LogMessage("Warning.txt", message, maxLinesWarning);
         }
+
         public static void LogError(string message)
         {
-            File.AppendAllText(pathError, $"{DateTime.Now} : {message}\n");
+            int maxLinesError = int.MaxValue;
+            LogMessage("Error.txt", message, maxLinesError);
+        }
+
+        private static void LogMessage(string fileName, string message, int maxLines)
+        {
+            string filePath = Path.Combine(_logDirectory, fileName);
+            string logMessage = $"{DateTime.Now} : {message}\n";
+            File.AppendAllText(filePath, logMessage);
+
+            RemoveOldLines(filePath, maxLines);
+        }
+        private static void RemoveOldLines(string filePath, int maxLines)
+        {
+            string[] lines = File.ReadAllLines(filePath);
+            int lineCount = lines.Length;
+            if (lineCount > maxLines)
+            {
+                int linesToRemove = lineCount - maxLines;
+                File.WriteAllLines(filePath, lines.Skip(linesToRemove));
+            }
         }
     }
 }
