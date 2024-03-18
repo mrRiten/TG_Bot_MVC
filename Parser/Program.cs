@@ -15,10 +15,10 @@ namespace Parser
 
         static void MainUpdate(string[] pathToParse)
         {
-            //var observer = new ParserObserverCreator();
-            //var parser = new ParserHTML(observer);
+            var observer = new ParserObserverCreator();
+            var parser = new ParserHTML(observer);
             //var builder = new ScheduleBuilder();
-            //parser.MainParse(pathToParse);
+            parser.MainParse(pathToParse);
             //builder.MainBuild();
 
             //var api = new LocalAPI(new LibraryContext());

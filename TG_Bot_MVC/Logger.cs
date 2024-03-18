@@ -14,44 +14,42 @@
 
         public static void LogDebug(string message)
         {
-            int maxLinesDebug = 10000;
-            LogMessage("Debug.txt", message, maxLinesDebug);
+            LogMessage("Debug.txt", message);
         }
 
         public static void LogInfo(string message)
         {
-            int maxLinesInfo = 1000;
-            LogMessage("Info.txt", message, maxLinesInfo);
+            LogMessage("Info.txt", message);
         }
 
         public static void LogWarning(string message)
         {
-            int maxLinesWarning = 500;
-            LogMessage("Warning.txt", message, maxLinesWarning);
+            LogMessage("Warning.txt", message);
         }
 
         public static void LogError(string message)
         {
-            int maxLinesError = int.MaxValue;
-            LogMessage("Error.txt", message, maxLinesError);
+            LogMessage("Error.txt", message);
         }
 
-        private static void LogMessage(string fileName, string message, int maxLines)
+        private static void LogMessage(string fileName, string message)
         {
             string filePath = Path.Combine(_logDirectory, fileName);
             string logMessage = $"{DateTime.Now} : {message}\n";
-            File.AppendAllText(filePath, logMessage);
 
-            RemoveOldLines(filePath, maxLines);
+            RemoveOldLog(filePath);
+            File.AppendAllText(filePath, logMessage);
         }
-        private static void RemoveOldLines(string filePath, int maxLines)
+        private static void RemoveOldLog(string filePath)
         {
-            string[] lines = File.ReadAllLines(filePath);
-            int lineCount = lines.Length;
-            if (lineCount > maxLines)
+            if (File.Exists(filePath))
             {
-                int linesToRemove = lineCount - maxLines;
-                File.WriteAllLines(filePath, lines.Skip(linesToRemove));
+                DateTime creationTime = File.GetCreationTime(filePath);
+                var maxAge = TimeSpan.FromDays(7);
+                if (creationTime - DateTime.Now >= maxAge)
+                {
+                    File.Delete(filePath);
+                }
             }
         }
     }
