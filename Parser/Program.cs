@@ -1,6 +1,4 @@
-﻿using TG_Bot_MVC;
-
-namespace Parser
+﻿namespace Parser
 {
     internal class Program
     {

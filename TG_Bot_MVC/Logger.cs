@@ -28,12 +28,14 @@
         {
             var maxAge = TimeSpan.FromDays(7);
             LogMessage("Warning.txt", message, maxAge);
+            Console.WriteLine($"{DateTime.Now} : {message}\n");
         }
 
         public static void LogError(string message)
         {
             var maxAge = TimeSpan.FromDays(7);
             LogMessage("Error.txt", message, maxAge);
+            Console.WriteLine($"{DateTime.Now} : {message}\n");
         }
 
         private static void LogMessage(string fileName, string message, TimeSpan maxAge)

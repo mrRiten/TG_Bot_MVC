@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TG_Bot_MVC;
+﻿using TG_Bot_MVC;
 
 namespace Parser
 {

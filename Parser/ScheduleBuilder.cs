@@ -1,7 +1,6 @@
-﻿using HtmlAgilityPack;
-using Newtonsoft.Json;
-using System.Security.Policy;
+﻿using Newtonsoft.Json;
 using TG_Bot_MVC;
+
 namespace Parser
 {
     internal class ScheduleBuilder
@@ -27,21 +26,24 @@ namespace Parser
                     replaceData = JsonConvert.DeserializeObject<Dictionary<int, string>>(replasementLesson.SerializeDataLessons);
                 }
 
-                if (replaceData != null)
-                { 
-                    for (int j = 0; j < defaultData.Count; j++)
-                    {
-                        if (replaceData[j] != null)
-                        {
-                            defaultData[j] = replaceData[j];
-                        }
-                    }
-                }
-
-                string currentData = JsonConvert.SerializeObject(defaultData, Formatting.Indented);
+                string currentData = BuildCurrentSchedule(replaceData, defaultData);
 
                 WriteToDatabase(idGroup, currentData);
             }
+        }
+        private static string BuildCurrentSchedule(Dictionary<int, string> replaceData, Dictionary<int, string> defaultData)
+        {
+            if (replaceData != null)
+            {
+                for (int i = 0; i < defaultData.Count; i++)
+                {
+                    if (replaceData[i] != null)
+                    {
+                        defaultData[i] = replaceData[i];
+                    }
+                }
+            }
+            return JsonConvert.SerializeObject(defaultData, Formatting.Indented);
         }
         private void WriteToDatabase(int idGroup, string currentData)
         {
