@@ -27,6 +27,7 @@ namespace TG_Bot_MVC
             var user = _context.Users.Where(u => u.UserTGId == userIdTg).FirstOrDefault();
             user.StatusId = statusId;
 
+            _context.Users.Update(user);
             _context.SaveChanges(); 
         }
 

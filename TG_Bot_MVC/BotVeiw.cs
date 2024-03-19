@@ -23,8 +23,8 @@ namespace TG_Bot_MVC
         {
             new[]
             {
-                InlineKeyboardButton.WithCallbackData(text: "Student", callbackData: "QStudent"),
-                InlineKeyboardButton.WithCallbackData(text: "Teacher", callbackData: "QTeacher"),
+                InlineKeyboardButton.WithCallbackData(text: "Student", callbackData: "SStudent"),
+                InlineKeyboardButton.WithCallbackData(text: "Teacher", callbackData: "STeacher"),
             }
         });
 
