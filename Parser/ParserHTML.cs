@@ -56,11 +56,11 @@ namespace Parser
 
                     string[] json = SerializeDictToArrString(groupDataArr);
 
-                    Logger.LogInfo("Parsing!");
+                    Logger.LogInfo("Parsed!");
 
                     WriteToDatabase(groupDataArr, json, WeekOfSchedule);
 
-                    Logger.LogInfo("Writed to database!");
+                    Logger.LogInfo("Replace schedule writed to database!");
                 }
                 else
                     throw new NoTableException("Таблица не найдена.");
@@ -155,48 +155,48 @@ namespace Parser
         }
         private static int[] ValidateNumbersReplacementLessons(string numbersReplacementLessons)
         {
-            var ValidNumsList = new List<int>();
+            var validNumsList = new List<int>();
 
             if (numbersReplacementLessons.Contains(','))
             {
-                string[] temp = numbersReplacementLessons.Split(',');
-                for (int i = 0; i < temp.Length; i++)
+                string[] splitedNumbers = numbersReplacementLessons.Split(',');
+                for (int i = 0; i < splitedNumbers.Length; i++)
                 {
-                    ValidNumsList.Add(int.Parse(temp[i]));
+                    validNumsList.Add(int.Parse(splitedNumbers[i]));
                 }
             }
             else if (numbersReplacementLessons.Contains('-'))
             {
-                string[] temp = numbersReplacementLessons.Split('-');
-                for (int i = int.Parse(temp[0]); i <= int.Parse(temp[temp.Length - 1]); i++)
+                string[] splitedNumbers = numbersReplacementLessons.Split('-');
+                for (int i = int.Parse(splitedNumbers[0]); i <= int.Parse(splitedNumbers[splitedNumbers.Length - 1]); i++)
                 {
-                    ValidNumsList.Add(i);
+                    validNumsList.Add(i);
                 }
             }
             else if (numbersReplacementLessons.Contains('.'))
             {
-                double temp = double.Parse(numbersReplacementLessons, CultureInfo.InvariantCulture);
-                if (temp <= 9.10)
-                    ValidNumsList.Add(0);
-                else if (temp <= 10.50)
-                    ValidNumsList.Add(1);
-                else if (temp <= 12.30)
-                    ValidNumsList.Add(2);
-                else if (temp <= 14.50)
-                    ValidNumsList.Add(3);
-                else if (temp <= 16.35)
-                    ValidNumsList.Add(4);
-                else if (temp <= 18.35)
-                    ValidNumsList.Add(5);
+                double splitedNumbers = double.Parse(numbersReplacementLessons, CultureInfo.InvariantCulture);
+                if (splitedNumbers <= 9.10)
+                    validNumsList.Add(0);
+                else if (splitedNumbers <= 10.50)
+                    validNumsList.Add(1);
+                else if (splitedNumbers <= 12.30)
+                    validNumsList.Add(2);
+                else if (splitedNumbers <= 14.50)
+                    validNumsList.Add(3);
+                else if (splitedNumbers <= 16.35)
+                    validNumsList.Add(4);
+                else if (splitedNumbers <= 18.35)
+                    validNumsList.Add(5);
                 else
-                    ValidNumsList.Add(6);
+                    validNumsList.Add(6);
             }
             else if (numbersReplacementLessons.Length == 1)
-                ValidNumsList.Add(int.Parse(numbersReplacementLessons));
+                validNumsList.Add(int.Parse(numbersReplacementLessons));
             else
                 throw new InvalidFormatException("Неверный формат номера пары в таблице.", numbersReplacementLessons);
 
-            return ValidNumsList.ToArray();
+            return validNumsList.ToArray();
         }
         private static string[] SerializeDictToArrString(Dictionary<string, Dictionary<int, string>>[] groupDataArr)
         {
@@ -232,7 +232,7 @@ namespace Parser
                     i++;
                 }
             }
-
+            Logger.LogDebug($"\n");
         }
     }
     class NoTableException(string message) : Exception(message) { }

@@ -45,7 +45,7 @@ namespace Parser
         }
         private void WriteToDatabase(int idGroup, string currentData)
         {
-            Logger.LogDebug($"\n\n{currentData}");
+            Logger.LogDebug($"\n{currentData}");
             _localAPI.DelCorrectSchedules((int)DateTime.Today.DayOfWeek);
             _localAPI.AddCorrectSchedule(
                     idGroup,
