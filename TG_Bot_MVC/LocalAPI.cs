@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 
 namespace TG_Bot_MVC
 {
@@ -27,6 +28,7 @@ namespace TG_Bot_MVC
             var user = _context.Users.Where(u => u.UserTGId == userIdTg).FirstOrDefault();
             user.StatusId = statusId;
 
+            _context.Users.Update(user);
             _context.SaveChanges(); 
         }
 
@@ -129,6 +131,20 @@ namespace TG_Bot_MVC
             }
         }
 
+        public void AddDefaultSchedule(int IdGroup, int weekOfScheduleId, string serializeDataLesson, int weekDay)
+        {
+            var schedule = new DefaultSchedule
+            {
+                GroupId = IdGroup,
+                WeekOfScheduleId = weekOfScheduleId,
+                Weekday = weekDay,
+                SerializeDataLessons = serializeDataLesson
+            };
+
+            _context.DefaultSchedules.Add(schedule);
+            _context.SaveChanges();
+        }
+
         public DefaultSchedule? GetDefaultSchedule(int IdGroup, int weekday)
         {
             return _context.DefaultSchedules.FirstOrDefault(ds => ds.GroupId == IdGroup && ds.Weekday == weekday);
@@ -218,6 +234,13 @@ namespace TG_Bot_MVC
             setting.GroupId = idGroup;
 
             _context.SaveChanges();
+        }
+
+        public int GetMaxIdGroup()
+        {
+            return _context.Groups
+                .OrderByDescending(g => g.IdGroup)
+                .FirstOrDefault().IdGroup;
         }
     }
 }

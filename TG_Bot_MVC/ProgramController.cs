@@ -1,9 +1,9 @@
-﻿using Org.BouncyCastle.Pqc.Crypto;
-using System.Diagnostics;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Passport;
+using TG_Bot_MVC.DataClasses;
+using TG_Bot_MVC.Handlers;
 
 namespace TG_Bot_MVC
 {
@@ -14,27 +14,32 @@ namespace TG_Bot_MVC
         private readonly LocalAPI _localAPI;
         private readonly DDoSData _dDoSData;
 
-        public ProgramController(BotVeiw botVeiw, bool isDebug)
+        public ProgramController(BotVeiw botVeiw, LibraryContext context)
         {
             _botVeiw = botVeiw;
             _configWorker = new ConfigWorker();
-            _localAPI = new LocalAPI(new LibraryContext(isDebug));
+            _localAPI = new LocalAPI(context);
             _dDoSData = new DDoSData();
         }
 
         internal async Task BotController(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            //if (update.Message is not { } message)
-            //    return;
-            //if (message.Text is not { } messageText)
-            //    return;
+            long chatId = 0;
+            if (update.CallbackQuery is not { } messageCallbackQuery)
+            {
+                messageCallbackQuery = null;
+                chatId = update.Message.Chat.Id;
+            }
+                
+            if (update.Message is not { } message)
+            {
+                message = update.CallbackQuery.Message;
+                chatId = update.CallbackQuery.Message.Chat.Id;
+            }
+            if (message == null && messageCallbackQuery == null)
+                return;
 
-            string messageText = update.Message.Text;
-            var message = update.Message;
-            
-            var chatId = update.Message.Chat.Id;
-
-            // Init ALL BaseUpdateHandler
+            // Init ALL BaseUpdateHandlers
             BaseUpdateHandler dataHandler = new DateHandler(null, _localAPI);
             BaseUpdateHandler dataToRequestHandler = new DateToRequestHandler(dataHandler, _localAPI);
             BaseUpdateHandler dDoSHandler = new DDoSHandler(dataToRequestHandler, _localAPI, _dDoSData);
@@ -48,19 +53,26 @@ namespace TG_Bot_MVC
 
             if (handler.Active(userUpdate))
             {
-                if (messageText == "/start")
+
+                if (messageCallbackQuery != null)
+                {
+                    var callbackHandler = new CallbackQuryHandler(_localAPI, messageCallbackQuery.Data, userUpdate);
+                    var response = callbackHandler.Active();
+                    await _botVeiw.EditInlineMessage(chatId, messageCallbackQuery.Message.MessageId, response, cancellationToken);
+                }
+                else if (message.Text == "/start")
                 {
                     string response = _configWorker.GetHelloMessage();
                     await _botVeiw.SendCommandResponse(chatId, response, cancellationToken);
                 }
-                else if (messageText.StartsWith("/"))
+                else if (message.Text.StartsWith("/"))
                 {
-                    await _botVeiw.SendCommandResponse(chatId, messageText, cancellationToken);
+                    await _botVeiw.SendCommandResponse(chatId, message.Text, cancellationToken);
                 }
                 else
                 {
                     string response = _localAPI.GetCorrectSchedule(
-                        _localAPI.GetFullUser(message.Chat.Id).Setting.GroupId, 
+                        _localAPI.GetFullUser(message.Chat.Id).Setting.GroupId,
                         (int)userUpdate.DateToRequest.DayOfWeek)
                         .SerializeDataLessons;
                     await _botVeiw.SendDefaultResponse(chatId, response, cancellationToken);
