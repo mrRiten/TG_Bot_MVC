@@ -26,9 +26,9 @@ namespace Parser
                     replaceData = JsonConvert.DeserializeObject<Dictionary<int, string>>(replasementLesson.SerializeDataLessons);
                 }
 
-                string currentData = BuildCurrentSchedule(replaceData, defaultData);
+                string currentSchedule = BuildCurrentSchedule(replaceData, defaultData);
 
-                WriteToDatabase(idGroup, currentData);
+                WriteToDatabase(idGroup, currentSchedule);
             }
         }
         private static string BuildCurrentSchedule(Dictionary<int, string> replaceData, Dictionary<int, string> defaultData)

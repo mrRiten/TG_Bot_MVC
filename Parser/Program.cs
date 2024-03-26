@@ -1,4 +1,6 @@
-﻿namespace Parser
+﻿using TG_Bot_MVC;
+
+namespace Parser
 {
     internal class Program
     {
@@ -13,15 +15,17 @@
 
         static void MainUpdate(string[] pathToParse)
         {
-            var observer = new ParserObserverCreator();
-            var parser = new ParserHTML(observer);
+            Console.WriteLine((int)DayOfWeek.Sunday);
+
+            //var observer = new ParserObserverCreator();
+            //var parser = new ParserHTML(observer);
             //var builder = new ScheduleBuilder();
-            parser.MainParse(pathToParse);
+            //parser.MainParse(pathToParse);
             //builder.MainBuild();
 
             //var api = new LocalAPI(new LibraryContext());
-            //api.DelReplasementLessons(6);
-            //api.DelCorrectSchedules(6);
+            //api.DelReplasementLessons(3);
+            //api.DelCorrectSchedules(3);
         }
     }
 }
