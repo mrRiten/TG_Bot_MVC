@@ -26,7 +26,21 @@ namespace TG_Bot_MVC
                 InlineKeyboardButton.WithCallbackData(text: "Student", callbackData: "SStudent"),
                 InlineKeyboardButton.WithCallbackData(text: "Teacher", callbackData: "STeacher"),
             }
+            
         });
+
+
+        public async Task EditInlineMessage(long IdChat, int IdMes, string response, CancellationToken cancellationToken)
+        {
+
+            await _bot.EditMessageTextAsync(IdChat, IdMes, response, replyMarkup: null);
+            await _bot.SendTextMessageAsync(
+                chatId: IdChat,
+                text: "Выбеите действие",
+                replyMarkup: defaultKeyboard,
+                parseMode: ParseMode.Markdown,
+                cancellationToken: cancellationToken);
+        }
 
         public async Task SendDefaultResponse(long IdChat, string response, CancellationToken cancellationToken)
         {
