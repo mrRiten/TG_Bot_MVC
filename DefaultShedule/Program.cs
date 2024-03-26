@@ -18,17 +18,21 @@ namespace BuildDefaultSchedule
 
         private static void MainBuild(string path, string weekOfSchedule)
         { 
-            int idWeekOfSchedule = weekOfSchedule == "Числитель" ? 1 : 2; // 1 - числитель, 2 - знаменатель
+            int idWeekOfSchedule = weekOfSchedule == "Числитель" ? 2 : 1; // 1 - числитель, 2 - знаменатель
             foreach (string file in Directory.GetFiles(path, $"*_{idWeekOfSchedule}.json"))
             {
                 string[] groups = GetGroups(file);
 
                 string json = File.ReadAllText(file);
                 JArray jsonArray = JArray.Parse(json);
-                for (int weekday = 1; weekday <= jsonArray.Count; weekday++)
+                for (int weekday = 0; weekday < jsonArray.Count; weekday++)
                 {
                     JObject defaultScheduleData = (JObject)jsonArray[weekday];
-                    WriteToDatabase(groups, defaultScheduleData.ToString(), weekOfSchedule, weekday);
+                    foreach (string group in groups)
+                    {
+                        WriteToDatabase(group, defaultScheduleData.ToString(), weekOfSchedule, weekday + 1);
+                    }
+                    
                 }
             }
         }
@@ -44,13 +48,17 @@ namespace BuildDefaultSchedule
             return groups.ToArray();
         }
 
-        private static void WriteToDatabase(string[] groups, string defaultSchedule, string weekOfSchedule, int weekDay)
+        private static void WriteToDatabase(string group, string defaultSchedule, string weekOfSchedule, int weekDay)
         {
             LibraryContext context = new(true);
             var localAPI = new LocalAPI(context);
-
-            //TODO: localAPI.AddDefaultShedule
-
+            
+            localAPI.AddDefaultSchedule(
+                        localAPI.TryGetGroupId(group),
+                        localAPI.GetWeekOfScheduleId(weekOfSchedule),
+                        defaultSchedule,
+                        weekDay
+                    );
         }
     }
 

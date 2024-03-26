@@ -13,13 +13,12 @@ namespace Parser
 
         public void MainBuild()
         {
-            for (int idGroup = 1; idGroup < 86; idGroup++)
+            for (int idGroup = 1; idGroup <= _localAPI.GetMaxIdGroup(); idGroup++)
             {
-                string defaultLesson = "{\r\n  \"0\": \"123\",\r\n  \"1\": \"123\",\r\n  \"2\": \"123\",\r\n  \"3\": \"123\",\r\n  \"4\": \"123\",\r\n  \"5\": \"123\",\r\n  \"6\": \"123\"\r\n}";
-                //DefaultSchedule? defaultLesson = _localAPI.GetDefaultSchedule(i, (int)DateTime.Today.DayOfWeek);
+                DefaultSchedule? defaultLesson = _localAPI.GetDefaultSchedule(idGroup, (int)DateTime.Today.DayOfWeek);
                 ReplasementLesson? replasementLesson = _localAPI.GetReplasementLesson(idGroup, (int)DateTime.Today.DayOfWeek);
 
-                Dictionary<int, string> defaultData = JsonConvert.DeserializeObject<Dictionary<int, string>>(defaultLesson);
+                Dictionary<int, string> defaultData = JsonConvert.DeserializeObject<Dictionary<int, string>>(defaultLesson.SerializeDataLessons);
                 Dictionary<int, string> replaceData = null;
                 if (replasementLesson != null)
                 {
