@@ -58,7 +58,7 @@ namespace TG_Bot_MVC
                 {
                     var callbackHandler = new CallbackQuryHandler(_localAPI, messageCallbackQuery.Data, userUpdate);
                     var response = callbackHandler.Active();
-                    await _botVeiw.SendDefaultResponse(chatId, response, cancellationToken);
+                    await _botVeiw.EditInlineMessage(chatId, messageCallbackQuery.Message.MessageId, response, cancellationToken);
                 }
                 else if (message.Text == "/start")
                 {
