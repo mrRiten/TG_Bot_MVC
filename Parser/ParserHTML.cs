@@ -212,7 +212,7 @@ namespace Parser
         }
         private static void WriteToDatabase(Dictionary<string, Dictionary<int, string>>[] groupDataArr, string[] json, string weekOfSchedule)
         {
-            LibraryContext context = new(true); // Debug mode = true! TODO: add handling debug mode with Main args
+            LibraryContext context = new(true); 
             var localAPI = new LocalAPI(context);
 
             localAPI.DelReplasementLessons((int)DateTime.Today.DayOfWeek);

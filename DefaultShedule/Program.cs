@@ -18,21 +18,20 @@ namespace BuildDefaultSchedule
 
         private static void MainBuild(string path, string weekOfSchedule)
         { 
-            int idWeekOfSchedule = weekOfSchedule == "Числитель" ? 2 : 1; // 1 - числитель, 2 - знаменатель
+            int idWeekOfSchedule = weekOfSchedule == "Числитель" ? 1 : 2; // 1 - числитель, 2 - знаменатель
             foreach (string file in Directory.GetFiles(path, $"*_{idWeekOfSchedule}.json"))
             {
                 string[] groups = GetGroups(file);
 
                 string json = File.ReadAllText(file);
                 JArray jsonArray = JArray.Parse(json);
-                for (int weekday = 0; weekday < jsonArray.Count; weekday++)
+                for (int i = 0; i < jsonArray.Count; i++)
                 {
-                    JObject defaultScheduleData = (JObject)jsonArray[weekday];
+                    JObject defaultScheduleData = (JObject)jsonArray[i];
                     foreach (string group in groups)
                     {
-                        WriteToDatabase(group, defaultScheduleData.ToString(), weekOfSchedule, weekday + 1);
+                        WriteToDatabase(group, defaultScheduleData.ToString(), weekOfSchedule, i + 1);
                     }
-                    
                 }
             }
         }
