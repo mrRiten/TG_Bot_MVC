@@ -121,7 +121,7 @@ namespace Parser
                     {
                         string group = cells[1].InnerText.ToUpper().Trim();
                         string numbersReplacementLessons = cells[2].InnerText;
-                        string rowData = $"{cells[4].InnerText} {cells[5].InnerText} (❗ замена)";
+                        string rowData = $"{cells[4].InnerText} - {cells[5].InnerText} (❗ замена)";
 
                         int[] keys = ValidateNumbersReplacementLessons(numbersReplacementLessons);
 
