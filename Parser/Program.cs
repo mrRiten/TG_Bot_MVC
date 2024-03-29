@@ -17,15 +17,9 @@ namespace Parser
         {
             Console.WriteLine((int)DayOfWeek.Sunday);
 
-            //var observer = new ParserObserverCreator();
-            //var parser = new ParserHTML(observer);
-            //var builder = new ScheduleBuilder();
-            //parser.MainParse(pathToParse);
-            //builder.MainBuild();
-
-            //var api = new LocalAPI(new LibraryContext());
-            //api.DelReplasementLessons(3);
-            //api.DelCorrectSchedules(3);
+            var observer = new ParserObserverCreator();
+            var parser = new ParserHTML(new List<IObserver>() { observer });
+            parser.MainParse(pathToParse);
         }
     }
 }

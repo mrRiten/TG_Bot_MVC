@@ -12,10 +12,9 @@ namespace Parser
 
         private List<IObserver> ObserverList;
 
-        public ParserHTML(IObserver observer)
+        public ParserHTML(List<IObserver> observer)
         {
-            ObserverList = new List<IObserver>();
-            AddObserver(observer);
+            ObserverList = observer;
         }
 
         public void Notify()

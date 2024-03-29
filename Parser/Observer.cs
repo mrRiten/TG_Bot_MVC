@@ -6,7 +6,8 @@ namespace Parser
     {
         public void Update()
         {
-            Logger.LogInfo("Call ParserObserverCreator");
+            var builder = new ScheduleBuilder();
+            builder.MainBuild();
         }
     }
 
