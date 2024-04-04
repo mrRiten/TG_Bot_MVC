@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
+using ZstdSharp.Unsafe;
 
 namespace TG_Bot_MVC
 {
@@ -131,6 +132,11 @@ namespace TG_Bot_MVC
             }
         }
 
+        public int GetCorrentWeekOfSchedule()
+        {
+            return _context.ReplasementLessons.FirstOrDefault().WeekOfScheduleId;
+        }
+
         public void AddDefaultSchedule(int IdGroup, int weekOfScheduleId, string serializeDataLesson, int weekDay)
         {
             var schedule = new DefaultSchedule
@@ -145,9 +151,10 @@ namespace TG_Bot_MVC
             _context.SaveChanges();
         }
 
-        public DefaultSchedule? GetDefaultSchedule(int IdGroup, int weekday)
+        public DefaultSchedule? GetDefaultSchedule(int IdGroup, int weekOfScheduleId, int weekday)
         {
-            return _context.DefaultSchedules.FirstOrDefault(ds => ds.GroupId == IdGroup && ds.Weekday == weekday);
+            return _context.DefaultSchedules.FirstOrDefault(ds => ds.GroupId == IdGroup && 
+            ds.Weekday == weekday && ds.WeekOfScheduleId == weekOfScheduleId);
         }
 
         public CorrectSchedule? GetCorrectSchedule(int IdGroup, int weekday)

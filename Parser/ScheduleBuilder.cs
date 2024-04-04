@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using TG_Bot_MVC;
+using ZstdSharp.Unsafe;
 
 namespace Parser
 {
@@ -13,11 +14,11 @@ namespace Parser
 
         public void MainBuild()
         {
+            int weekOfSchedule = _localAPI.GetCorrentWeekOfSchedule();
             for (int idGroup = 1; idGroup <= _localAPI.GetMaxIdGroup(); idGroup++)
             {
-                DefaultSchedule? defaultLesson = _localAPI.GetDefaultSchedule(idGroup, (int)DateTime.Today.DayOfWeek);
+                DefaultSchedule? defaultLesson = _localAPI.GetDefaultSchedule(idGroup, weekOfSchedule, (int)DateTime.Today.DayOfWeek);
                 ReplasementLesson? replasementLesson = _localAPI.GetReplasementLesson(idGroup, (int)DateTime.Today.DayOfWeek);
-
                 Dictionary<int, string> defaultData = JsonConvert.DeserializeObject<Dictionary<int, string>>(defaultLesson.SerializeDataLessons);
                 Dictionary<int, string> replaceData = null;
                 if (replasementLesson != null)
@@ -28,6 +29,7 @@ namespace Parser
                 string currentSchedule = BuildCurrentSchedule(replaceData, defaultData);
 
                 WriteToDatabase(idGroup, currentSchedule);
+                Logger.LogInfo("CurrentSchedule was loaded into DataBase");
             }
         }
         private static string BuildCurrentSchedule(Dictionary<int, string> replaceData, Dictionary<int, string> defaultData)

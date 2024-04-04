@@ -15,7 +15,9 @@ namespace Parser
     {
         public void Update()
         {
-            Logger.LogInfo("Call ParserObserverDelitor");
+            var _localAPI = new LocalAPI(new LibraryContext());
+            int targetDataToDel = (int)DateTime.Today.AddDays(-2).DayOfWeek;
+            _localAPI.DelCorrectSchedules(targetDataToDel);
         }
     }
 }

@@ -15,8 +15,6 @@ namespace Parser
 
         static void MainUpdate(string[] pathToParse)
         {
-            Console.WriteLine((int)DayOfWeek.Sunday);
-
             var observer = new ParserObserverCreator();
             var parser = new ParserHTML(new List<IObserver>() { observer });
             parser.MainParse(pathToParse);

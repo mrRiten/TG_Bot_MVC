@@ -1,40 +1,48 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Passport;
+using TG_Bot_MVC.Controller;
 using TG_Bot_MVC.DataClasses;
 using TG_Bot_MVC.Handlers;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace TG_Bot_MVC
 {
     internal class ProgramController
     {
-        private readonly BotVeiw _botVeiw;
+        private readonly BotView _botVeiw;
         private readonly ConfigWorker _configWorker;
         private readonly LocalAPI _localAPI;
         private readonly DDoSData _dDoSData;
+        private Dictionary<string, BaseController> _controllerDict;
 
-        public ProgramController(BotVeiw botVeiw, LibraryContext context)
+        private UpdateControllerInfo _controllerInfo = new();
+
+        public ProgramController(BotView botVeiw, LibraryContext context)
         {
             _botVeiw = botVeiw;
             _configWorker = new ConfigWorker();
             _localAPI = new LocalAPI(context);
             _dDoSData = new DDoSData();
+            _controllerDict = new Dictionary<string, BaseController>
+            {
+                { "Command", new CommandController(_botVeiw, _localAPI, _dDoSData) },
+                { "Start", new StartController(_botVeiw, _localAPI, _dDoSData) },
+                { "Schedule", new ScheduleController(_botVeiw, _localAPI, _dDoSData) },
+                { "Callback", new CallbackController(_botVeiw, _localAPI, _dDoSData) },
+            };
         }
 
         internal async Task BotController(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            long chatId = 0;
             if (update.CallbackQuery is not { } messageCallbackQuery)
             {
                 messageCallbackQuery = null;
-                chatId = update.Message.Chat.Id;
             }
-                
+
             if (update.Message is not { } message)
             {
                 message = update.CallbackQuery.Message;
-                chatId = update.CallbackQuery.Message.Chat.Id;
             }
             if (message == null && messageCallbackQuery == null)
                 return;
@@ -53,31 +61,32 @@ namespace TG_Bot_MVC
 
             if (handler.Active(userUpdate))
             {
-
+                _controllerInfo.Update = update;
+                _controllerInfo.UserUpdate = userUpdate;
+                _controllerInfo.CancellationToken = cancellationToken;
                 if (messageCallbackQuery != null)
                 {
-                    var callbackHandler = new CallbackQuryHandler(_localAPI, messageCallbackQuery.Data, userUpdate);
-                    var response = callbackHandler.Active();
-                    await _botVeiw.EditInlineMessage(chatId, messageCallbackQuery.Message.MessageId, response, cancellationToken);
+                    await CallController("Callback", _controllerInfo);
                 }
-                else if (message.Text == "/start")
+                else if (message.Text.StartsWith("/start"))
                 {
-                    string response = _configWorker.GetHelloMessage();
-                    await _botVeiw.SendCommandResponse(chatId, response, cancellationToken);
+                    await CallController("Start", _controllerInfo);
                 }
                 else if (message.Text.StartsWith("/"))
                 {
-                    await _botVeiw.SendCommandResponse(chatId, message.Text, cancellationToken);
+                    await CallController("Command", _controllerInfo);
                 }
                 else
                 {
-                    string response = _localAPI.GetCorrectSchedule(
-                        _localAPI.GetFullUser(message.Chat.Id).Setting.GroupId,
-                        (int)userUpdate.DateToRequest.DayOfWeek)
-                        .SerializeDataLessons;
-                    await _botVeiw.SendDefaultResponse(chatId, response, cancellationToken);
+                    await CallController("Schedule", _controllerInfo);
                 }
+
             }
+        }
+
+        private async Task CallController(string controllerName, UpdateControllerInfo updateInfo)
+        {
+            await _controllerDict[controllerName].ActiveController(updateInfo.Update, updateInfo.UserUpdate, updateInfo.CancellationToken);
         }
 
         internal Task ErrorBotController(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
