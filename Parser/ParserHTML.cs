@@ -9,6 +9,7 @@ namespace Parser
     internal class ParserHTML : ISubject
     {
         public static string WeekOfSchedule;
+        public static DayOfWeek CurrentDayOfWeek;
 
         private List<IObserver> ObserverList;
 
@@ -41,34 +42,34 @@ namespace Parser
             HtmlDocument document1 = web.Load(url[0]);
             HtmlDocument document2 = web.Load(url[1]);
 
+            HtmlNode table1 = document1.DocumentNode.SelectSingleNode("//table");
+            HtmlNode table2 = document2.DocumentNode.SelectSingleNode("//table");
+
+            if (table1 == null)
+                throw new NoTable1Exception("Таблица первой смены не найдена.");
+            if (table2 == null)
+                throw new NoTable2Exception("Таблица второй смены не найдена.");
+
             try
             {
-                HtmlNode table1 = document1.DocumentNode.SelectSingleNode("//table");
-                HtmlNode table2 = document2.DocumentNode.SelectSingleNode("//table");
-
-                // Get the denominator or numerator from an HTML document
                 WeekOfSchedule = GetWeekOfSchedule(document1);
+                CurrentDayOfWeek = GetDayOfWeek(document1);
 
-                if (table1 != null)
-                {
-                    Dictionary<string, Dictionary<int, string>>[] groupDataArr = [ParseScheduleTable(table1), ParseScheduleTable(table2)];
+                Dictionary<string, Dictionary<int, string>>[] groupDataArr = [ParseScheduleTable(table1), ParseScheduleTable(table2)];
 
-                    string[] json = SerializeDictToArrString(groupDataArr);
+                string[] json = SerializeDictToArrString(groupDataArr);
 
-                    Logger.LogInfo("Parsed!");
+                Logger.LogInfo("Parse completed");
 
-                    WriteToDatabase(groupDataArr, json, WeekOfSchedule);
+                WriteToDatabase(groupDataArr, json);
 
-                    Logger.LogInfo("Replace schedule writed to database!");
-                }
-                else
-                    throw new NoTableException("Таблица не найдена.");
+                Logger.LogInfo("Replace schedule writed to database!");
             }
-            catch (NoTableException ex)
+            catch (NoTable1Exception ex)
             {
                 Logger.LogWarning($"Произошло исключение в Parser: {ex.Message}");
             }
-            catch (LessThanThreeCellsException ex)
+            catch (NoTable2Exception ex)
             {
                 Logger.LogWarning($"Произошло исключение в Parser: {ex.Message}");
             }
@@ -79,6 +80,10 @@ namespace Parser
             catch (InvalidFormatException ex)
             {
                 Logger.LogWarning($"Произошло исключение в Parser: {ex.Message} Значение номера пары: {ex.CurrentValue}");
+            }
+            catch (DayOfWeekException ex)
+            {
+                Logger.LogWarning($"Произошло исключение в Parser: {ex.Message} Название дня недели: {ex.CurrentValue}");
             }
             catch (Exception ex)
             {
@@ -115,19 +120,18 @@ namespace Parser
             {
                 HtmlNodeCollection cells = row.SelectNodes(".//td");
 
-                if (cells != null && cells.Count > 2)
+                if (cells == null || cells.Count < 2) 
+                    continue;
+
+
+                string group = cells[1].InnerText;
+                string numbersReplacementLesson = cells[2].InnerText;
+
+                if (!string.IsNullOrEmpty(group) || !string.IsNullOrEmpty(numbersReplacementLesson))
                 {
-                    if (!string.IsNullOrEmpty(cells[1].InnerText) && !string.IsNullOrEmpty(cells[2].InnerText))
+                    if (!groupData.TryGetValue(group, out Dictionary<int, string>? value))
                     {
-                        string group = cells[1].InnerText.ToUpper().Trim();
-                        string numbersReplacementLessons = cells[2].InnerText;
-                        string rowData = $"{cells[4].InnerText} - {cells[5].InnerText} (❗ замена)";
-
-                        int[] keys = ValidateNumbersReplacementLessons(numbersReplacementLessons);
-
-                        if (!groupData.TryGetValue(group, out Dictionary<int, string>? value))
-                        {
-                            value = new Dictionary<int, string>()
+                        value = new Dictionary<int, string>()
                             {
                                 { 0, null },
                                 { 1, null },
@@ -137,44 +141,64 @@ namespace Parser
                                 { 5, null },
                                 { 6, null }
                             };
-                            groupData[group] = value;
-                        }
-
-                        // Write data about substitutions in the dictionary
-                        foreach (int key in keys)
-                        {
-                            value[key] = rowData;
-                        }
+                        groupData[group] = value;
                     }
+
+                    // timeReplacementLesson maybe empty. Example: 8.20 or 9.30
+                    int[] keys = ValidateNumbersReplacementLessons(numbersReplacementLesson, out string timeReplacementLesson);
+
+                    string rowData = $"{timeReplacementLesson}{cells[4].InnerText} - {cells[5].InnerText} (❗ замена)";
+
+                    // Write data about substitutions in the dictionary
+                    foreach (int key in keys)
+                        value[key] = rowData;
                 }
-                else
-                    throw new LessThanThreeCellsException("Ячеек в таблице меньше 3.");
             }
             return groupData;
         }
-        private static int[] ValidateNumbersReplacementLessons(string numbersReplacementLessons)
+
+        private static DayOfWeek GetDayOfWeek(HtmlDocument document)
+        {
+            HtmlNodeCollection divElements = document.DocumentNode.SelectNodes("//div");
+            string[] strings = divElements[2].InnerText.Split(' ');
+            string dayOfWeek = strings[strings.Length - 1];
+
+            CultureInfo culture = new("ru-RU");
+            string[] russiaDayNames = culture.DateTimeFormat.DayNames;
+
+            for (int i = 0; i < russiaDayNames.Length; i++)
+            {
+                if (russiaDayNames[i].Equals(dayOfWeek, StringComparison.CurrentCultureIgnoreCase))
+                    return (DayOfWeek)i;
+            }
+
+            throw new DayOfWeekException("Некорректное название дня недели.", dayOfWeek);
+        }
+
+        private static int[] ValidateNumbersReplacementLessons(string numbersReplacementLesson, out string timeReplacementLesson)
         {
             var validNumsList = new List<int>();
+            timeReplacementLesson = "";
 
-            if (numbersReplacementLessons.Contains(','))
+            if (numbersReplacementLesson.Contains(','))
             {
-                string[] splitedNumbers = numbersReplacementLessons.Split(',');
+                string[] splitedNumbers = numbersReplacementLesson.Split(',');
                 for (int i = 0; i < splitedNumbers.Length; i++)
                 {
                     validNumsList.Add(int.Parse(splitedNumbers[i]));
                 }
             }
-            else if (numbersReplacementLessons.Contains('-'))
+            else if (numbersReplacementLesson.Contains('-'))
             {
-                string[] splitedNumbers = numbersReplacementLessons.Split('-');
+                string[] splitedNumbers = numbersReplacementLesson.Split('-');
                 for (int i = int.Parse(splitedNumbers[0]); i <= int.Parse(splitedNumbers[splitedNumbers.Length - 1]); i++)
                 {
                     validNumsList.Add(i);
                 }
             }
-            else if (numbersReplacementLessons.Contains('.'))
+            else if (numbersReplacementLesson.Contains('.'))
             {
-                double splitedNumbers = double.Parse(numbersReplacementLessons, CultureInfo.InvariantCulture);
+                double splitedNumbers = double.Parse(numbersReplacementLesson, CultureInfo.InvariantCulture);
                 if (splitedNumbers <= 9.10)
                     validNumsList.Add(0);
                 else if (splitedNumbers <= 10.50)
@@ -189,11 +213,13 @@ namespace Parser
                     validNumsList.Add(5);
                 else
                     validNumsList.Add(6);
+
+                timeReplacementLesson = $"{numbersReplacementLesson} ";
             }
-            else if (numbersReplacementLessons.Length == 1)
-                validNumsList.Add(int.Parse(numbersReplacementLessons));
+            else if (numbersReplacementLesson.Length == 1)
+                validNumsList.Add(int.Parse(numbersReplacementLesson));
             else
-                throw new InvalidFormatException("Неверный формат номера пары в таблице.", numbersReplacementLessons);
+                throw new InvalidFormatException("Неверный формат номера пары в таблице.", numbersReplacementLesson);
 
             return validNumsList.ToArray();
         }
@@ -209,12 +235,12 @@ namespace Parser
             }
             return json.ToArray();
         }
-        private static void WriteToDatabase(Dictionary<string, Dictionary<int, string>>[] groupDataArr, string[] json, string weekOfSchedule)
+        private static void WriteToDatabase(Dictionary<string, Dictionary<int, string>>[] groupDataArr, string[] json)
         {
-            LibraryContext context = new(true); 
-            var localAPI = new LocalAPI(context);
+            LibraryContext context = new(true);
+            LocalAPI localAPI = new(context);
 
-            localAPI.DelReplasementLessons((int)DateTime.Today.DayOfWeek);
+            localAPI.DelReplasementLessons((int)CurrentDayOfWeek);
             Logger.LogDebug($"Замены перед записью в БД: ");
             int i = 0;
             foreach (var groupData in groupDataArr)
@@ -224,9 +250,9 @@ namespace Parser
                     Logger.LogDebug($"{group} - {json[i]}");
                     localAPI.AddReplasementLesson(
                         localAPI.TryGetGroupId(group),
-                        localAPI.GetWeekOfScheduleId(weekOfSchedule),
+                        localAPI.GetWeekOfScheduleId(WeekOfSchedule),
                         json[i],
-                        (int)DateTime.Today.DayOfWeek
+                        (int)CurrentDayOfWeek
                     );
                     i++;
                 }
@@ -234,8 +260,9 @@ namespace Parser
             Logger.LogDebug($"\n");
         }
     }
-    class NoTableException(string message) : Exception(message) { }
+    class NoTable1Exception(string message) : Exception(message) { }
+    class NoTable2Exception(string message) : Exception(message) { }
     class NoBracketsException(string message) : Exception(message) { }
-    class LessThanThreeCellsException(string message) : Exception(message) { }
     class InvalidFormatException(string message, string currentValue) : ArgumentException(message) { public string CurrentValue { get; } = currentValue; }
+    class DayOfWeekException(string message, string currentValue) : ArgumentException(message) { public string CurrentValue { get; } = currentValue; }
 }

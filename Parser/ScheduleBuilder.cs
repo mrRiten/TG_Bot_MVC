@@ -1,5 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using Mysqlx.Session;
+using MySqlX.XDevAPI.Common;
+using Newtonsoft.Json;
+using System.Text;
+using System.Text.RegularExpressions;
 using TG_Bot_MVC;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Parser
 {
@@ -13,27 +18,42 @@ namespace Parser
 
         public void MainBuild()
         {
-            _localAPI.DelCorrectSchedules((int)DateTime.Today.DayOfWeek);
-            for (int idGroup = 1; idGroup <= _localAPI.GetMaxIdGroup(); idGroup++)
+            try
             {
-                DefaultSchedule? defaultLesson = _localAPI.GetDefaultSchedule(idGroup, (int)DateTime.Today.DayOfWeek);
-                ReplasementLesson? replasementLesson = _localAPI.GetReplasementLesson(idGroup, (int)DateTime.Today.DayOfWeek);
-                if (defaultLesson == null)
-                    continue;
-                Dictionary<int, string> defaultData = JsonConvert.DeserializeObject<Dictionary<int, string>>(defaultLesson.SerializeDataLessons);
-                Dictionary<int, string> replaceData = null;
-                if (replasementLesson != null)
+                DayOfWeek oldDayOfWeek = GetOldDayOfWeek();
+                if (oldDayOfWeek != DayOfWeek.Sunday)
+                    _localAPI.DelCorrectSchedules((int)oldDayOfWeek);
+
+                _localAPI.DelCorrectSchedules((int)ParserHTML.CurrentDayOfWeek);
+
+                for (int idGroup = 1; idGroup <= _localAPI.GetMaxIdGroup(); idGroup++)
                 {
-                    replaceData = JsonConvert.DeserializeObject<Dictionary<int, string>>(replasementLesson.SerializeDataLessons);
+                    DefaultSchedule? defaultLesson = _localAPI.GetDefaultSchedule(idGroup, (int)DateTime.Today.DayOfWeek);
+                    ReplasementLesson? replasementLesson = _localAPI.GetReplasementLesson(idGroup, (int)DateTime.Today.DayOfWeek);
+                    if (defaultLesson == null)
+                        continue;
+
+                    Dictionary<int, string> defaultData = JsonConvert.DeserializeObject<Dictionary<int, string>>(defaultLesson.SerializeDataLessons);
+                    Dictionary<int, string> replaceData = null;
+
+                    if (replasementLesson != null)
+                        replaceData = JsonConvert.DeserializeObject<Dictionary<int, string>>(replasementLesson.SerializeDataLessons);
+
+                    Dictionary<int, string> currentScheduleData = BuildCurrentSchedule(replaceData, defaultData);
+
+                    string currentSchedule = BuildUI(currentScheduleData);
+
+                    Logger.LogInfo($"Build comleted for idGroup: {idGroup}");
+
+                    WriteToDatabase(idGroup, currentSchedule);
+
+                    Logger.LogInfo($"Current schedule writed to database for idGroup: {idGroup}");
                 }
-
-                Dictionary<int, string> currentScheduleData = BuildCurrentSchedule(replaceData, defaultData);
-
-                string currentSchedule = BuildUI(currentScheduleData);
-
-                WriteToDatabase(idGroup, currentSchedule);
             }
-            Console.WriteLine("Buuild comleted");
+            catch (Exception ex)
+            {
+                Logger.LogError($"Произошла неизвестная ошибка в Parser: {ex.Message}");
+            }
         }
         private static Dictionary<int, string> BuildCurrentSchedule(Dictionary<int, string> replaceData, Dictionary<int, string> defaultData)
         {
@@ -47,36 +67,40 @@ namespace Parser
                     }
                 }
             }
+
             return defaultData;
         }
-        private static string BuildUI(Dictionary<int, string> currentScheduleData) {
-            string currentSchedule = $"📑 Расписание на {DateTime.Today.DayOfWeek}\n";
-            foreach (var item in currentScheduleData)
-            {
-                if (item.Value == null)
-                    continue;
-                string key = item.Key.ToString();
-                string value = item.Value;
 
-                string result = value;
-                for (int i = 0; i < result.Length; i++)
-                {
-                    if (result[i] == '-')
-                    {
-                        result = result.Insert(i + 2, "[");
-                    }
-                    else if (result[i] == '(')
-                    {
-                        result = result.Insert(i - 2, "]");
-                    }
-                    else if (i + 1 == value.Length)
-                    {
-                        result = result.Insert(i + 2, "]");
-                    }
-                    
-                }
-                currentSchedule += $"`{key}` **{result}**\n";
+        private static DayOfWeek GetOldDayOfWeek()
+        {
+            DayOfWeek oldDayOfWeek;
+            if (ParserHTML.CurrentDayOfWeek == DayOfWeek.Sunday)
+                oldDayOfWeek = DayOfWeek.Friday;
+            else if (ParserHTML.CurrentDayOfWeek == DayOfWeek.Monday)
+                oldDayOfWeek = DayOfWeek.Saturday;
+            else
+                oldDayOfWeek = ParserHTML.CurrentDayOfWeek - 2;
+
+            return oldDayOfWeek;
+        }
+        private static string BuildUI(Dictionary<int, string> currentScheduleData)
+        {
+            string currentSchedule = $"📑 Расписание на {ParserHTML.CurrentDayOfWeek}\n";
+            foreach (var el in currentScheduleData)
+            {
+                int numberSchedule = el.Key;
+                string schedulesText = el.Value;
+                if (schedulesText == null)
+                    continue;
+
+                string pattern = @"^(.*?) - (.*?)( \(❗|$)";
+                string replacement = "$1 - [$2]$3";
+
+                string modifiedChedulesText = Regex.Replace(schedulesText, pattern, replacement);
+
+                currentSchedule += $"`{numberSchedule}` **{modifiedChedulesText}**\n";
             }
+
             return currentSchedule;
         }
         private void WriteToDatabase(int idGroup, string currentSchedule)
@@ -86,7 +110,7 @@ namespace Parser
                     idGroup,
                     _localAPI.GetWeekOfScheduleId(ParserHTML.WeekOfSchedule),
                     currentSchedule,
-                    (int)DateTime.Today.DayOfWeek
+                    (int)ParserHTML.CurrentDayOfWeek
             );
         }
     }

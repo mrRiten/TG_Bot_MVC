@@ -15,9 +15,14 @@ namespace Parser
 
         static void MainUpdate(string[] pathToParse)
         {
+            var api = new LocalAPI(new LibraryContext());
+            api.DelReplasementLessons(6);
+
             var observer = new ParserObserverCreator();
-            var parser = new ParserHTML(new List<IObserver>() { observer });
+            var parser = new ParserHTML([observer]);
             parser.MainParse(pathToParse);
+
+            
         }
     }
 }
